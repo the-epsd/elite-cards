@@ -10,9 +10,9 @@ interface Product {
   title: string
   description: string
   price: number
-  imageUrl: string
+  image_url: string
   set: string
-  createdAt: string
+  created_at: string
 }
 
 interface UserSession {
@@ -26,11 +26,13 @@ export default function CatalogPage() {
   const [loading, setLoading] = useState(true)
   const [addingToStore, setAddingToStore] = useState<string | null>(null)
   const [session, setSession] = useState<UserSession | null>(null)
+  const [addedProductIds, setAddedProductIds] = useState<Set<string>>(new Set())
   const router = useRouter()
 
   useEffect(() => {
     fetchProducts()
     fetchSession()
+    fetchAddedProducts()
   }, [])
 
   const fetchSession = async () => {
@@ -42,6 +44,18 @@ export default function CatalogPage() {
       }
     } catch (error) {
       console.error('Error fetching session:', error)
+    }
+  }
+
+  const fetchAddedProducts = async () => {
+    try {
+      const response = await fetch('/api/products/added')
+      if (response.ok) {
+        const data = await response.json()
+        setAddedProductIds(new Set(data.addedProductIds))
+      }
+    } catch (error) {
+      console.error('Error fetching added products:', error)
     }
   }
 
@@ -74,6 +88,8 @@ export default function CatalogPage() {
       if (response.ok) {
         const data = await response.json()
         alert(data.message || 'Product successfully added to your store!')
+        // Update the added products list
+        setAddedProductIds(prev => new Set([...prev, productId]))
       } else {
         const error = await response.json()
         alert(error.error || 'Failed to add product to store')
@@ -178,7 +194,7 @@ export default function CatalogPage() {
                     {setProducts.map((product) => (
                       <div key={product.id} className="border rounded-lg overflow-hidden hover:shadow-lg transition-shadow">
                         <Image
-                          src={product.imageUrl}
+                          src={product.image_url}
                           alt={product.title}
                           width={300}
                           height={192}
@@ -189,14 +205,24 @@ export default function CatalogPage() {
                           <p className="text-sm text-gray-500 mb-3 line-clamp-2">{product.description}</p>
                           <div className="flex items-center justify-between">
                             <span className="text-lg font-semibold text-indigo-600">${product.price}</span>
-                            <button
-                              onClick={() => handleAddToStore(product.id)}
-                              disabled={addingToStore === product.id}
-                              className="flex items-center px-3 py-2 bg-indigo-600 text-white text-sm rounded-md hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed"
-                            >
-                              <ShoppingCart className="h-4 w-4 mr-1" />
-                              {addingToStore === product.id ? 'Adding...' : 'Add to Store'}
-                            </button>
+                            {addedProductIds.has(product.id) ? (
+                              <button
+                                disabled
+                                className="flex items-center px-3 py-2 bg-gray-400 text-white text-sm rounded-md cursor-not-allowed"
+                              >
+                                <ShoppingCart className="h-4 w-4 mr-1" />
+                                Added
+                              </button>
+                            ) : (
+                              <button
+                                onClick={() => handleAddToStore(product.id)}
+                                disabled={addingToStore === product.id}
+                                className="flex items-center px-3 py-2 bg-indigo-600 text-white text-sm rounded-md hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                              >
+                                <ShoppingCart className="h-4 w-4 mr-1" />
+                                {addingToStore === product.id ? 'Adding...' : 'Add to Store'}
+                              </button>
+                            )}
                           </div>
                         </div>
                       </div>

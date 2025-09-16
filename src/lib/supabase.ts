@@ -27,6 +27,14 @@ export interface Product {
   updated_at: string
 }
 
+export interface AddedProduct {
+  id: string
+  user_id: string
+  product_id: string
+  shopify_product_id: string
+  added_at: string
+}
+
 // Database functions
 export async function createOrUpdateUser(shopDomain: string, accessToken: string, role: string): Promise<User> {
   // First, check if user already exists
@@ -105,6 +113,47 @@ export async function createProduct(productData: {
   return data
 }
 
+export async function updateProduct(productId: string, productData: {
+  title?: string
+  description?: string
+  price?: number
+  image_url?: string
+  set?: string
+}): Promise<Product> {
+  const { data, error } = await supabase
+    .from('products')
+    .update({
+      ...productData,
+      updated_at: new Date().toISOString()
+    })
+    .eq('id', productId)
+    .select()
+    .single()
+
+  if (error) {
+    throw new Error(`Failed to update product: ${error.message}`)
+  }
+
+  return data
+}
+
+export async function getProductById(productId: string): Promise<Product | null> {
+  const { data, error } = await supabase
+    .from('products')
+    .select('*')
+    .eq('id', productId)
+    .single()
+
+  if (error) {
+    if (error.code === 'PGRST116') {
+      return null // Product not found
+    }
+    throw new Error(`Failed to get product: ${error.message}`)
+  }
+
+  return data
+}
+
 export async function getProductsBySet(set: string): Promise<Product[]> {
   const { data, error } = await supabase
     .from('products')
@@ -130,4 +179,55 @@ export async function getAllProducts(): Promise<Product[]> {
   }
 
   return data || []
+}
+
+// Added products tracking functions
+export async function addProductToUser(userId: string, productId: string, shopifyProductId: string): Promise<AddedProduct> {
+  const { data, error } = await supabase
+    .from('added_products')
+    .insert({
+      user_id: userId,
+      product_id: productId,
+      shopify_product_id: shopifyProductId,
+      added_at: new Date().toISOString()
+    })
+    .select()
+    .single()
+
+  if (error) {
+    throw new Error(`Failed to add product to user: ${error.message}`)
+  }
+
+  return data
+}
+
+export async function getAddedProductsByUser(userId: string): Promise<AddedProduct[]> {
+  const { data, error } = await supabase
+    .from('added_products')
+    .select('*')
+    .eq('user_id', userId)
+
+  if (error) {
+    throw new Error(`Failed to get added products: ${error.message}`)
+  }
+
+  return data || []
+}
+
+export async function isProductAddedByUser(userId: string, productId: string): Promise<boolean> {
+  const { data, error } = await supabase
+    .from('added_products')
+    .select('id')
+    .eq('user_id', userId)
+    .eq('product_id', productId)
+    .single()
+
+  if (error) {
+    if (error.code === 'PGRST116') {
+      return false // Product not added
+    }
+    throw new Error(`Failed to check if product is added: ${error.message}`)
+  }
+
+  return !!data
 }

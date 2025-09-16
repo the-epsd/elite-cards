@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getSessionFromRequest, getUserFromSession } from '@/lib/auth'
-import { supabase } from '@/lib/supabase'
+import { supabase, addProductToUser, isProductAddedByUser } from '@/lib/supabase'
 import { createProductInShopify } from '@/lib/shopify'
 
 export async function POST(request: NextRequest) {
@@ -35,6 +35,15 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    // Check if product is already added by this user
+    const isAlreadyAdded = await isProductAddedByUser(session.userId, productId)
+    if (isAlreadyAdded) {
+      return NextResponse.json(
+        { error: 'Product already added to your store' },
+        { status: 400 }
+      )
+    }
+
     // Get user's access token
     const user = await getUserFromSession(session)
     if (!user) {
@@ -60,6 +69,9 @@ export async function POST(request: NextRequest) {
         { status: 500 }
       )
     }
+
+    // Track that this product was added by this user
+    await addProductToUser(session.userId, productId, result.productId!)
 
     return NextResponse.json({
       success: true,

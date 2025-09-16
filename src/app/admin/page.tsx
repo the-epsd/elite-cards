@@ -2,13 +2,14 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { Package, Users, Plus, LogOut, BarChart3 } from 'lucide-react'
+import { Package, Users, Plus, LogOut, BarChart3, Edit } from 'lucide-react'
 
 interface Product {
   id: string
   title: string
   price: number
   set: string
+  image_url: string
   created_at: string
 }
 
@@ -228,13 +229,31 @@ export default function AdminPage() {
                 <div className="space-y-3">
                   {products.slice(0, 5).map((product) => (
                     <div key={product.id} className="flex items-center justify-between py-2 border-b border-gray-100 last:border-b-0">
-                      <div>
-                        <h4 className="text-sm font-medium text-gray-900">{product.title}</h4>
-                        <p className="text-sm text-gray-500">{product.set} • ${product.price}</p>
+                      <div className="flex items-center space-x-3">
+                        <img
+                          src={product.image_url}
+                          alt={product.title}
+                          className="w-12 h-8 object-cover rounded"
+                          onError={(e) => {
+                            e.currentTarget.style.display = 'none'
+                          }}
+                        />
+                        <div>
+                          <h4 className="text-sm font-medium text-gray-900">{product.title}</h4>
+                          <p className="text-sm text-gray-500">{product.set} • ${product.price}</p>
+                        </div>
                       </div>
-                      <span className="text-xs text-gray-400">
-                        {new Date(product.created_at).toLocaleDateString()}
-                      </span>
+                      <div className="flex items-center space-x-2">
+                        <button
+                          onClick={() => router.push(`/admin/edit-product/${product.id}`)}
+                          className="text-indigo-600 hover:text-indigo-900"
+                        >
+                          <Edit className="h-4 w-4" />
+                        </button>
+                        <span className="text-xs text-gray-400">
+                          {new Date(product.created_at).toLocaleDateString()}
+                        </span>
+                      </div>
                     </div>
                   ))}
                 </div>

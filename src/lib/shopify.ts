@@ -127,11 +127,21 @@ export async function validateShopifyCallback(
     const { code, shop, hmac } = query
 
     console.log('Validating Shopify callback:', { code, shop, hmac })
+    console.log('Parameter types:', {
+      codeType: typeof code,
+      shopType: typeof shop,
+      hmacType: typeof hmac
+    })
 
     if (!code || !shop || !hmac) {
+      console.error('Missing required parameters:', {
+        hasCode: !!code,
+        hasShop: !!shop,
+        hasHmac: !!hmac
+      })
       return {
         success: false,
-        error: 'Missing required parameters',
+        error: `Missing required parameters: code=${!!code}, shop=${!!shop}, hmac=${!!hmac}`,
       }
     }
 

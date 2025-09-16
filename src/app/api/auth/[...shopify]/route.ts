@@ -8,11 +8,17 @@ export async function GET(request: NextRequest) {
   const code = searchParams.get('code')
   const hmac = searchParams.get('hmac')
   const state = searchParams.get('state')
-  
+
   console.log('=== OAUTH ROUTE CALLED ===')
   console.log('URL:', request.url)
   console.log('Full search params:', Object.fromEntries(searchParams.entries()))
-  console.log('Search params:', { shop, code: code?.substring(0, 10) + '...', hmac: hmac?.substring(0, 10) + '...', state })
+  console.log('Raw search params:', { shop, code, hmac, state })
+  console.log('Search params:', {
+    shop,
+    code: code ? code.substring(0, 10) + '...' : 'undefined',
+    hmac: hmac ? hmac.substring(0, 10) + '...' : 'undefined',
+    state
+  })
 
   // If no code, start OAuth flow
   if (!code) {
@@ -24,7 +30,10 @@ export async function GET(request: NextRequest) {
     const shopDomain = shop.includes('.') ? shop : `${shop}.myshopify.com`
     const appUrl = process.env.APP_URL || 'https://elite-cards.vercel.app'
     const redirectUri = `${appUrl}/api/auth/shopify`
+
+    console.log('Starting OAuth flow:', { shopDomain, appUrl, redirectUri })
     const authUrl = getShopifyAuthUrl(shopDomain, redirectUri)
+    console.log('Generated auth URL:', authUrl)
 
     return NextResponse.redirect(authUrl)
   }
@@ -33,6 +42,8 @@ export async function GET(request: NextRequest) {
   try {
     console.log('=== OAUTH CALLBACK START ===')
     console.log('OAuth callback received:', { code, shop, hmac, state })
+    console.log('Request URL:', request.url)
+    console.log('Request headers:', Object.fromEntries(request.headers.entries()))
     console.log('Environment check:', {
       hasApiKey: !!process.env.SHOPIFY_API_KEY,
       hasApiSecret: !!process.env.SHOPIFY_API_SECRET_KEY,
@@ -70,7 +81,7 @@ export async function GET(request: NextRequest) {
       shopDomain: user.shop_domain,
       role: user.role as 'admin' | 'end_user',
     }
-    
+
     console.log('Creating session with data:', sessionData)
     const sessionToken = createSession(sessionData)
 
@@ -85,7 +96,7 @@ export async function GET(request: NextRequest) {
     // Create response with session cookie
     const appUrl = process.env.APP_URL || 'https://elite-cards.vercel.app'
     const response = NextResponse.redirect(`${appUrl}${redirectUrl}`)
-    
+
     // Set the session cookie directly
     response.cookies.set('session', sessionToken, {
       httpOnly: true,

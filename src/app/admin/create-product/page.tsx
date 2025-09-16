@@ -69,9 +69,9 @@ export default function CreateProductPage() {
                   <p className="text-sm text-gray-500">Add a new trading card to the catalog</p>
                 </div>
 
-                <form onSubmit={handleSubmit} className="px-6 py-6 space-y-6">
-                  <div>
-                    <label htmlFor="title" className="block text-sm font-medium text-gray-700">
+                <form onSubmit={handleSubmit} className="px-6 py-8 space-y-8">
+                  <div className="space-y-2">
+                    <label htmlFor="title" className="block text-sm font-semibold text-gray-800">
                       Card Title *
                     </label>
                     <input
@@ -81,48 +81,53 @@ export default function CreateProductPage() {
                       required
                       value={formData.title}
                       onChange={handleChange}
-                      className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm text-gray-900"
+                      className="w-full px-4 py-3 border border-gray-200 rounded-xl shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-gray-900 placeholder-gray-400 transition-all duration-200 hover:border-gray-300"
                       placeholder="e.g., Charizard VMAX"
                     />
                   </div>
 
-                  <div>
-                    <label htmlFor="description" className="block text-sm font-medium text-gray-700">
+                  <div className="space-y-2">
+                    <label htmlFor="description" className="block text-sm font-semibold text-gray-800">
                       Description *
                     </label>
                     <textarea
                       name="description"
                       id="description"
-                      rows={3}
+                      rows={4}
                       required
                       value={formData.description}
                       onChange={handleChange}
-                      className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm text-gray-900"
+                      className="w-full px-4 py-3 border border-gray-200 rounded-xl shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-gray-900 placeholder-gray-400 transition-all duration-200 hover:border-gray-300 resize-none"
                       placeholder="Describe the card's features, rarity, and appeal..."
                     />
                   </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div>
-                      <label htmlFor="price" className="block text-sm font-medium text-gray-700">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <div className="space-y-2">
+                      <label htmlFor="price" className="block text-sm font-semibold text-gray-800">
                         Price (USD) *
                       </label>
-                      <input
-                        type="number"
-                        name="price"
-                        id="price"
-                        step="0.01"
-                        min="0"
-                        required
-                        value={formData.price}
-                        onChange={handleChange}
-                        className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm text-gray-900"
-                        placeholder="29.99"
-                      />
+                      <div className="relative">
+                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                          <span className="text-gray-500 sm:text-sm">$</span>
+                        </div>
+                        <input
+                          type="number"
+                          name="price"
+                          id="price"
+                          step="0.01"
+                          min="0"
+                          required
+                          value={formData.price}
+                          onChange={handleChange}
+                          className="w-full pl-8 pr-4 py-3 border border-gray-200 rounded-xl shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-gray-900 placeholder-gray-400 transition-all duration-200 hover:border-gray-300"
+                          placeholder="29.99"
+                        />
+                      </div>
                     </div>
 
-                    <div>
-                      <label htmlFor="set" className="block text-sm font-medium text-gray-700">
+                    <div className="space-y-2">
+                      <label htmlFor="set" className="block text-sm font-semibold text-gray-800">
                         Card Set *
                       </label>
                       <select
@@ -131,7 +136,7 @@ export default function CreateProductPage() {
                         required
                         value={formData.set}
                         onChange={handleChange}
-                        className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm text-gray-900"
+                        className="w-full px-4 py-3 border border-gray-200 rounded-xl shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-gray-900 transition-all duration-200 hover:border-gray-300"
                       >
                         <option value="">Select a set</option>
                         <option value="Base Set">Base Set</option>
@@ -158,27 +163,29 @@ export default function CreateProductPage() {
                     </div>
                   </div>
 
-                  <div>
-                    <div className="flex items-center">
+                  <div className="bg-gray-50 rounded-xl p-6 space-y-4">
+                    <div className="flex items-start space-x-3">
                       <input
                         type="checkbox"
                         name="isSingle"
                         id="isSingle"
                         checked={formData.isSingle}
                         onChange={handleChange}
-                        className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
+                        className="mt-1 h-5 w-5 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
                       />
-                      <label htmlFor="isSingle" className="ml-2 block text-sm font-medium text-gray-700">
-                        Single (creates NM, LP, MP variants)
-                      </label>
+                      <div>
+                        <label htmlFor="isSingle" className="block text-sm font-semibold text-gray-800">
+                          Single Card (creates condition variants)
+                        </label>
+                        <p className="mt-1 text-sm text-gray-600">
+                          Check this if this is a single card that should have Near Mint, Light Play, and Moderately Played variants
+                        </p>
+                      </div>
                     </div>
-                    <p className="mt-1 text-sm text-gray-500">
-                      Check this if this is a single card that should have condition variants
-                    </p>
                   </div>
 
-                  <div>
-                    <label htmlFor="imageUrl" className="block text-sm font-medium text-gray-700">
+                  <div className="space-y-2">
+                    <label htmlFor="imageUrl" className="block text-sm font-semibold text-gray-800">
                       Image URL *
                     </label>
                     <input
@@ -188,26 +195,26 @@ export default function CreateProductPage() {
                       required
                       value={formData.imageUrl}
                       onChange={handleChange}
-                      className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm text-gray-900"
+                      className="w-full px-4 py-3 border border-gray-200 rounded-xl shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-gray-900 placeholder-gray-400 transition-all duration-200 hover:border-gray-300"
                       placeholder="https://example.com/card-image.jpg"
                     />
-                    <p className="mt-1 text-sm text-gray-500">
-                      Use a high-quality image URL (300x192px recommended)
+                    <p className="text-sm text-gray-500">
+                      Use a high-quality image URL (square aspect ratio recommended)
                     </p>
                   </div>
 
-                  <div className="flex justify-end space-x-3">
+                  <div className="flex justify-end space-x-4 pt-6 border-t border-gray-200">
                     <button
                       type="button"
                       onClick={() => router.push('/admin')}
-                      className="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                      className="px-6 py-3 border border-gray-300 rounded-xl shadow-sm text-sm font-semibold text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-all duration-200"
                     >
                       Cancel
                     </button>
                     <button
                       type="submit"
                       disabled={loading}
-                      className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="px-8 py-3 border border-transparent rounded-xl shadow-sm text-sm font-semibold text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
                     >
                       {loading ? 'Creating...' : 'Create Product'}
                     </button>

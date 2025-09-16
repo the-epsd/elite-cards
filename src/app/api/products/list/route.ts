@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getSessionFromRequest } from '@/lib/auth'
-import { prisma } from '@/lib/db'
+import { getProductsBySet, getAllProducts } from '@/lib/supabase'
 
 export async function GET(request: NextRequest) {
   try {
@@ -13,12 +13,7 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url)
     const set = searchParams.get('set')
 
-    const where = set ? { set } : {}
-
-    const products = await prisma.product.findMany({
-      where,
-      orderBy: { createdAt: 'desc' },
-    })
+    const products = set ? await getProductsBySet(set) : await getAllProducts()
 
     // Group products by set
     const productsBySet = products.reduce((acc, product) => {

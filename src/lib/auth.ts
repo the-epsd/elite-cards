@@ -1,5 +1,5 @@
 import jwt from 'jsonwebtoken'
-import { prisma } from './db'
+import { supabase, createOrUpdateUser as supabaseCreateOrUpdateUser, getUserByShopDomain } from './supabase'
 import { cookies } from 'next/headers'
 import { NextRequest } from 'next/server'
 
@@ -37,9 +37,7 @@ export async function getSessionFromCookies(): Promise<UserSession | null> {
 }
 
 export async function getUserFromSession(session: UserSession) {
-  return await prisma.user.findUnique({
-    where: { id: session.userId },
-  })
+  return await getUserByShopDomain(session.shopDomain)
 }
 
 export async function createOrUpdateUser(
@@ -47,15 +45,7 @@ export async function createOrUpdateUser(
   accessToken: string,
   role: 'admin' | 'end_user' = 'end_user'
 ) {
-  return await prisma.user.upsert({
-    where: { shopDomain },
-    update: { accessToken, role },
-    create: {
-      shopDomain,
-      accessToken,
-      role,
-    },
-  })
+  return await supabaseCreateOrUpdateUser(shopDomain, accessToken, role)
 }
 
 export function setSessionCookie(session: string) {

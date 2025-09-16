@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getSessionFromRequest, getUserFromSession } from '@/lib/auth'
-import { prisma } from '@/lib/db'
+import { supabase } from '@/lib/supabase'
 import { createProductInShopify } from '@/lib/shopify'
 
 export async function POST(request: NextRequest) {
@@ -22,11 +22,13 @@ export async function POST(request: NextRequest) {
     }
 
     // Get the product from our database
-    const product = await prisma.product.findUnique({
-      where: { id: productId },
-    })
+    const { data: product, error } = await supabase
+      .from('products')
+      .select('*')
+      .eq('id', productId)
+      .single()
 
-    if (!product) {
+    if (error || !product) {
       return NextResponse.json(
         { error: 'Product not found' },
         { status: 404 }
@@ -41,13 +43,13 @@ export async function POST(request: NextRequest) {
 
     // Push product to Shopify
     const result = await createProductInShopify(
-      user.accessToken,
-      user.shopDomain,
+      user.access_token,
+      user.shop_domain,
       {
         title: product.title,
         description: product.description,
         price: product.price,
-        imageUrl: product.imageUrl,
+        imageUrl: product.image_url,
         set: product.set,
       }
     )

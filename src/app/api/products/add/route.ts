@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getSessionFromRequest } from '@/lib/auth'
-import { prisma } from '@/lib/db'
+import { createProduct } from '@/lib/supabase'
 
 export async function POST(request: NextRequest) {
   try {
@@ -24,15 +24,13 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const product = await prisma.product.create({
-      data: {
-        title,
-        description,
-        price: parseFloat(price),
-        imageUrl,
-        set,
-        createdBy: session.userId,
-      },
+    const product = await createProduct({
+      title,
+      description,
+      price: parseFloat(price),
+      image_url: imageUrl,
+      set,
+      created_by: session.userId,
     })
 
     return NextResponse.json({ success: true, product })

@@ -7,7 +7,7 @@ let shopifyInstance: ReturnType<typeof shopifyApi> | null = null
 function getShopifyInstance() {
   if (!shopifyInstance) {
     const apiKey = process.env.SHOPIFY_API_KEY
-    const apiSecretKey = process.env.SHOPIFY_API_SECRET_KEY
+    const apiSecretKey = process.env.SHOPIFY_API_SECRET_KEY || process.env.SHOPIFY_API_SECRET
 
     if (!apiKey || !apiSecretKey) {
       throw new Error('Missing Shopify API credentials. Please set SHOPIFY_API_KEY and SHOPIFY_API_SECRET_KEY environment variables.')
@@ -139,10 +139,11 @@ export async function validateShopifyCallback(
     // In production, you should validate the HMAC signature
 
     // Check if environment variables are set
-    if (!process.env.SHOPIFY_API_KEY || !process.env.SHOPIFY_API_SECRET_KEY) {
+    const apiSecretKey = process.env.SHOPIFY_API_SECRET_KEY || process.env.SHOPIFY_API_SECRET
+    if (!process.env.SHOPIFY_API_KEY || !apiSecretKey) {
       console.error('Missing environment variables:', {
         hasApiKey: !!process.env.SHOPIFY_API_KEY,
-        hasApiSecret: !!process.env.SHOPIFY_API_SECRET_KEY,
+        hasApiSecret: !!apiSecretKey,
       })
       return {
         success: false,
@@ -158,7 +159,7 @@ export async function validateShopifyCallback(
       },
       body: new URLSearchParams({
         client_id: process.env.SHOPIFY_API_KEY,
-        client_secret: process.env.SHOPIFY_API_SECRET_KEY,
+        client_secret: apiSecretKey,
         code: code as string,
       }),
     })

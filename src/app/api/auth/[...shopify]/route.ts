@@ -60,7 +60,7 @@ export async function GET(request: NextRequest) {
     // Create JWT session
     const sessionToken = createSession({
       userId: user.id,
-      shopDomain: user.shopDomain,
+      shopDomain: user.shop_domain,
       role: user.role as 'admin' | 'end_user',
     })
 

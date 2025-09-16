@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import ShopifyAppBridge from "@/components/ShopifyAppBridge";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -26,16 +25,10 @@ export default function RootLayout({
   return (
     <html lang="en">
       <head>
-        <script
-          src="https://cdn.shopify.com/shopifycloud/app-bridge.js"
-          data-api-key={process.env.NEXT_PUBLIC_SHOPIFY_API_KEY}
-          async
-        />
       </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <ShopifyAppBridge />
         {children}
       </body>
     </html>

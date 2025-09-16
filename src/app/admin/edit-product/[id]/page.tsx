@@ -2,7 +2,8 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { useRouter, useParams } from 'next/navigation'
-import { Package, ArrowLeft, Save } from 'lucide-react'
+import { Save } from 'lucide-react'
+import Sidebar from '@/components/Sidebar'
 
 interface Product {
   id: string
@@ -128,26 +129,14 @@ export default function EditProductPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <header className="bg-white shadow">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center py-6">
-            <div className="flex items-center">
-              <button
-                onClick={() => router.push('/admin')}
-                className="flex items-center text-gray-500 hover:text-gray-700 mr-4"
-              >
-                <ArrowLeft className="h-5 w-5 mr-2" />
-                Back to Admin
-              </button>
-              <Package className="h-8 w-8 text-indigo-600" />
-              <h1 className="ml-2 text-2xl font-bold text-gray-900">Edit Product</h1>
-            </div>
-          </div>
-        </div>
-      </header>
+    <div className="min-h-screen bg-gray-50 flex">
+      {/* Sidebar */}
+      <Sidebar currentPage="admin" />
 
-      <main className="max-w-2xl mx-auto py-6 sm:px-6 lg:px-8">
+      {/* Main Content */}
+      <div className="flex-1 flex flex-col">
+        <main className="flex-1 py-6 px-6">
+          <div className="max-w-2xl mx-auto">
         <div className="bg-white shadow rounded-lg">
           <div className="px-6 py-4 border-b border-gray-200">
             <h2 className="text-lg font-medium text-gray-900">Product Details</h2>
@@ -302,7 +291,9 @@ export default function EditProductPage() {
             </div>
           </form>
         </div>
-      </main>
+          </div>
+        </main>
+      </div>
     </div>
   )
 }

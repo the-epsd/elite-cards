@@ -2,7 +2,8 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { Package, Users, Plus, LogOut, BarChart3, Edit } from 'lucide-react'
+import { Package, Users, Edit } from 'lucide-react'
+import Sidebar from '@/components/Sidebar'
 
 interface Product {
   id: string
@@ -55,10 +56,6 @@ export default function AdminPage() {
     }
   }
 
-  const handleLogout = () => {
-    document.cookie = 'session=; Path=/; Max-Age=0'
-    router.push('/auth/login')
-  }
 
   if (loading) {
     return (
@@ -77,63 +74,7 @@ export default function AdminPage() {
   return (
     <div className="min-h-screen bg-gray-50 flex">
       {/* Sidebar */}
-      <div className="w-64 bg-white shadow-lg flex flex-col">
-        {/* Logo Section */}
-        <div className="p-6 border-b border-gray-200">
-          <div className="flex items-center justify-center">
-            <BarChart3 className="h-10 w-10 text-indigo-600" />
-            <h1 className="ml-3 text-xl font-bold text-gray-900">Elite Cards</h1>
-          </div>
-        </div>
-
-        {/* Navigation */}
-        <div className="flex-1 p-4">
-          <nav className="space-y-2">
-            <div className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">
-              Admin
-            </div>
-            <button
-              onClick={() => router.push('/admin')}
-              className="w-full flex items-center px-3 py-2 text-sm text-indigo-600 bg-indigo-50 rounded-md"
-            >
-              <BarChart3 className="h-4 w-4 mr-3" />
-              Dashboard
-            </button>
-            <button
-              onClick={() => router.push('/admin/create-product')}
-              className="w-full flex items-center px-3 py-2 text-sm text-gray-700 hover:text-indigo-600 hover:bg-gray-100 rounded-md transition-colors"
-            >
-              <Plus className="h-4 w-4 mr-3" />
-              Create Product
-            </button>
-            <button
-              onClick={() => router.push('/admin/users')}
-              className="w-full flex items-center px-3 py-2 text-sm text-gray-700 hover:text-indigo-600 hover:bg-gray-100 rounded-md transition-colors"
-            >
-              <Users className="h-4 w-4 mr-3" />
-              Manage Users
-            </button>
-            <button
-              onClick={() => router.push('/catalog')}
-              className="w-full flex items-center px-3 py-2 text-sm text-gray-700 hover:text-indigo-600 hover:bg-gray-100 rounded-md transition-colors"
-            >
-              <Package className="h-4 w-4 mr-3" />
-              View Catalog
-            </button>
-          </nav>
-        </div>
-
-        {/* Logout Button */}
-        <div className="p-4 border-t border-gray-200">
-          <button
-            onClick={handleLogout}
-            className="w-full flex items-center px-3 py-2 text-sm text-gray-700 hover:text-red-600 hover:bg-red-50 rounded-md transition-colors"
-          >
-            <LogOut className="h-4 w-4 mr-3" />
-            Logout
-          </button>
-        </div>
-      </div>
+      <Sidebar currentPage="admin" />
 
       {/* Main Content */}
       <div className="flex-1 flex flex-col">

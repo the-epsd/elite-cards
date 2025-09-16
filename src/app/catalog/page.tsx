@@ -1,9 +1,8 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
-import Image from 'next/image'
-import { ShoppingCart, LogOut, Package, Settings, Users, Plus } from 'lucide-react'
+import { ShoppingCart, Package } from 'lucide-react'
+import Sidebar from '@/components/Sidebar'
 
 interface Product {
   id: string
@@ -15,37 +14,17 @@ interface Product {
   created_at: string
 }
 
-interface UserSession {
-  userId: string
-  shopDomain: string
-  role: 'admin' | 'end_user'
-}
-
 export default function CatalogPage() {
   const [products, setProducts] = useState<Record<string, Product[]>>({})
   const [loading, setLoading] = useState(true)
   const [addingToStore, setAddingToStore] = useState<string | null>(null)
-  const [session, setSession] = useState<UserSession | null>(null)
   const [addedProductIds, setAddedProductIds] = useState<Set<string>>(new Set())
-  const router = useRouter()
 
   useEffect(() => {
     fetchProducts()
-    fetchSession()
     fetchAddedProducts()
   }, [])
 
-  const fetchSession = async () => {
-    try {
-      const response = await fetch('/api/auth/session')
-      if (response.ok) {
-        const sessionData = await response.json()
-        setSession(sessionData.session)
-      }
-    } catch (error) {
-      console.error('Error fetching session:', error)
-    }
-  }
 
   const fetchAddedProducts = async () => {
     try {
@@ -103,10 +82,6 @@ export default function CatalogPage() {
     }
   }
 
-  const handleLogout = () => {
-    document.cookie = 'session=; Path=/; Max-Age=0'
-    router.push('/auth/login')
-  }
 
   if (loading) {
     return (
@@ -122,65 +97,7 @@ export default function CatalogPage() {
   return (
     <div className="min-h-screen bg-gray-50 flex">
       {/* Sidebar */}
-      <div className="w-64 bg-white shadow-lg flex flex-col">
-        {/* Logo Section */}
-        <div className="p-6 border-b border-gray-200">
-          <div className="flex items-center justify-center">
-            <Package className="h-10 w-10 text-indigo-600" />
-            <h1 className="ml-3 text-xl font-bold text-gray-900">Elite Cards</h1>
-          </div>
-        </div>
-
-        {/* Navigation */}
-        <div className="flex-1 p-4">
-          <nav className="space-y-2">
-            <div className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">
-              Catalog
-            </div>
-
-            {/* Admin Navigation */}
-            {session?.role === 'admin' && (
-              <>
-                <div className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3 mt-6">
-                  Admin
-                </div>
-                <button
-                  onClick={() => router.push('/admin')}
-                  className="w-full flex items-center px-3 py-2 text-sm text-gray-700 hover:text-indigo-600 hover:bg-gray-100 rounded-md transition-colors"
-                >
-                  <Settings className="h-4 w-4 mr-3" />
-                  Dashboard
-                </button>
-                <button
-                  onClick={() => router.push('/admin/create-product')}
-                  className="w-full flex items-center px-3 py-2 text-sm text-gray-700 hover:text-indigo-600 hover:bg-gray-100 rounded-md transition-colors"
-                >
-                  <Plus className="h-4 w-4 mr-3" />
-                  Create Product
-                </button>
-                <button
-                  onClick={() => router.push('/admin/users')}
-                  className="w-full flex items-center px-3 py-2 text-sm text-gray-700 hover:text-indigo-600 hover:bg-gray-100 rounded-md transition-colors"
-                >
-                  <Users className="h-4 w-4 mr-3" />
-                  Manage Users
-                </button>
-              </>
-            )}
-          </nav>
-        </div>
-
-        {/* Logout Button */}
-        <div className="p-4 border-t border-gray-200">
-          <button
-            onClick={handleLogout}
-            className="w-full flex items-center px-3 py-2 text-sm text-gray-700 hover:text-red-600 hover:bg-red-50 rounded-md transition-colors"
-          >
-            <LogOut className="h-4 w-4 mr-3" />
-            Logout
-          </button>
-        </div>
-      </div>
+      <Sidebar currentPage="catalog" />
 
       {/* Main Content */}
       <div className="flex-1 flex flex-col">

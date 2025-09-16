@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Package, ArrowLeft, BarChart3, Plus, Users } from 'lucide-react'
+import Sidebar from '@/components/Sidebar'
 
 export default function CreateProductPage() {
   const [formData, setFormData] = useState({
@@ -53,63 +53,7 @@ export default function CreateProductPage() {
   return (
     <div className="min-h-screen bg-gray-50 flex">
       {/* Sidebar */}
-      <div className="w-64 bg-white shadow-lg flex flex-col">
-        {/* Logo Section */}
-        <div className="p-6 border-b border-gray-200">
-          <div className="flex items-center justify-center">
-            <Package className="h-10 w-10 text-indigo-600" />
-            <h1 className="ml-3 text-xl font-bold text-gray-900">Elite Cards</h1>
-          </div>
-        </div>
-
-        {/* Navigation */}
-        <div className="flex-1 p-4">
-          <nav className="space-y-2">
-            <div className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">
-              Admin
-            </div>
-            <button
-              onClick={() => router.push('/admin')}
-              className="w-full flex items-center px-3 py-2 text-sm text-gray-700 hover:text-indigo-600 hover:bg-gray-100 rounded-md transition-colors"
-            >
-              <BarChart3 className="h-4 w-4 mr-3" />
-              Dashboard
-            </button>
-            <button
-              onClick={() => router.push('/admin/create-product')}
-              className="w-full flex items-center px-3 py-2 text-sm text-indigo-600 bg-indigo-50 rounded-md"
-            >
-              <Plus className="h-4 w-4 mr-3" />
-              Create Product
-            </button>
-            <button
-              onClick={() => router.push('/admin/users')}
-              className="w-full flex items-center px-3 py-2 text-sm text-gray-700 hover:text-indigo-600 hover:bg-gray-100 rounded-md transition-colors"
-            >
-              <Users className="h-4 w-4 mr-3" />
-              Manage Users
-            </button>
-            <button
-              onClick={() => router.push('/catalog')}
-              className="w-full flex items-center px-3 py-2 text-sm text-gray-700 hover:text-indigo-600 hover:bg-gray-100 rounded-md transition-colors"
-            >
-              <Package className="h-4 w-4 mr-3" />
-              View Catalog
-            </button>
-          </nav>
-        </div>
-
-        {/* Logout Button */}
-        <div className="p-4 border-t border-gray-200">
-          <button
-            onClick={() => router.push('/admin')}
-            className="w-full flex items-center px-3 py-2 text-sm text-gray-700 hover:text-gray-600 hover:bg-gray-100 rounded-md transition-colors"
-          >
-            <ArrowLeft className="h-4 w-4 mr-3" />
-            Back to Admin
-          </button>
-        </div>
-      </div>
+      <Sidebar currentPage="create-product" />
 
       {/* Main Content */}
       <div className="flex-1 flex flex-col">

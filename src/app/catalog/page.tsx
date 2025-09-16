@@ -181,26 +181,27 @@ export default function CatalogPage() {
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 p-6">
                       {setProducts.map((product) => (
                         <div key={product.id} className="border rounded-lg overflow-hidden hover:shadow-lg transition-shadow">
-                          {product.image_url ? (
-                            <Image
-                              src={product.image_url}
-                              alt={product.title}
-                              width={300}
-                              height={192}
-                              className="w-full h-48 object-cover"
-                              onError={(e) => {
-                                console.error('Image failed to load:', product.image_url)
-                                e.currentTarget.src = '/placeholder-card.svg'
-                              }}
-                              onLoad={() => {
-                                console.log('Image loaded successfully:', product.image_url)
-                              }}
-                            />
-                          ) : (
-                            <div className="w-full h-48 bg-gray-200 flex items-center justify-center">
+                          <div className="aspect-square bg-gray-200 flex items-center justify-center overflow-hidden">
+                            {product.image_url ? (
+                              <Image
+                                src={product.image_url}
+                                alt={product.title}
+                                width={300}
+                                height={300}
+                                className="w-full h-full object-cover"
+                                onError={(e) => {
+                                  console.error('Image failed to load:', product.image_url)
+                                  e.currentTarget.style.display = 'none'
+                                }}
+                                onLoad={() => {
+                                  console.log('Image loaded successfully:', product.image_url)
+                                }}
+                              />
+                            ) : null}
+                            {!product.image_url && (
                               <Package className="h-12 w-12 text-gray-400" />
-                            </div>
-                          )}
+                            )}
+                          </div>
                           <div className="p-4">
                             <h4 className="font-medium text-gray-900 mb-2">{product.title}</h4>
                             <p className="text-sm text-gray-500 mb-3 line-clamp-2">{product.description}</p>

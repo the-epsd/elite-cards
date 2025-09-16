@@ -204,16 +204,22 @@ export default function AdminPage() {
                     {products.slice(0, 5).map((product) => (
                       <div key={product.id} className="flex items-center justify-between py-2 border-b border-gray-100 last:border-b-0">
                         <div className="flex items-center space-x-3">
-                          <Image
-                            src={product.image_url}
-                            alt={product.title}
-                            width={48}
-                            height={32}
-                            className="w-12 h-8 object-cover rounded"
-                            onError={(e) => {
-                              e.currentTarget.style.display = 'none'
-                            }}
-                          />
+                          <div className="w-12 h-8 bg-gray-200 rounded flex items-center justify-center overflow-hidden">
+                            {product.image_url ? (
+                              <Image
+                                src={product.image_url}
+                                alt={product.title}
+                                width={48}
+                                height={32}
+                                className="w-full h-full object-cover"
+                                onError={(e) => {
+                                  e.currentTarget.style.display = 'none'
+                                }}
+                              />
+                            ) : (
+                              <Package className="h-4 w-4 text-gray-400" />
+                            )}
+                          </div>
                           <div>
                             <h4 className="text-sm font-medium text-gray-900">{product.title}</h4>
                             <p className="text-sm text-gray-500">{product.set} • ${product.price}</p>

@@ -8,11 +8,11 @@ function getShopifyInstance() {
   if (!shopifyInstance) {
     const apiKey = process.env.SHOPIFY_API_KEY
     const apiSecretKey = process.env.SHOPIFY_API_SECRET_KEY
-    
+
     if (!apiKey || !apiSecretKey) {
       throw new Error('Missing Shopify API credentials. Please set SHOPIFY_API_KEY and SHOPIFY_API_SECRET_KEY environment variables.')
     }
-    
+
     shopifyInstance = shopifyApi({
       apiKey,
       apiSecretKey,
@@ -22,7 +22,7 @@ function getShopifyInstance() {
       isEmbeddedApp: true,
     })
   }
-  
+
   return shopifyInstance
 }
 
@@ -126,6 +126,8 @@ export async function validateShopifyCallback(
   try {
     const { code, shop, hmac } = query
 
+    console.log('Validating Shopify callback:', { code, shop, hmac })
+
     if (!code || !shop || !hmac) {
       return {
         success: false,
@@ -140,19 +142,27 @@ export async function validateShopifyCallback(
     const tokenResponse = await fetch(`https://${shop}/admin/oauth/access_token`, {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json',
+        'Content-Type': 'application/x-www-form-urlencoded',
       },
-      body: JSON.stringify({
-        client_id: process.env.SHOPIFY_API_KEY,
-        client_secret: process.env.SHOPIFY_API_SECRET_KEY,
+      body: new URLSearchParams({
+        client_id: process.env.SHOPIFY_API_KEY!,
+        client_secret: process.env.SHOPIFY_API_SECRET_KEY!,
         code: code as string,
       }),
     })
 
     if (!tokenResponse.ok) {
+      const errorText = await tokenResponse.text()
+      console.error('Token exchange failed:', {
+        status: tokenResponse.status,
+        statusText: tokenResponse.statusText,
+        error: errorText,
+        shop: shop,
+        code: code
+      })
       return {
         success: false,
-        error: 'Failed to exchange code for access token',
+        error: `Failed to exchange code for access token: ${tokenResponse.status} ${errorText}`,
       }
     }
 

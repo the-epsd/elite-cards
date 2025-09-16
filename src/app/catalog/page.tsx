@@ -25,10 +25,15 @@ export default function CatalogPage() {
   const [addingToStore, setAddingToStore] = useState<string | null>(null)
   const [removingFromStore, setRemovingFromStore] = useState<string | null>(null)
   const [addingAllFromSet, setAddingAllFromSet] = useState<string | null>(null)
+  const [removingAllFromSet, setRemovingAllFromSet] = useState<string | null>(null)
   const [addedProductIds, setAddedProductIds] = useState<Set<string>>(new Set())
   const [removeConfirm, setRemoveConfirm] = useState<{ show: boolean; product: Product | null }>({
     show: false,
     product: null
+  })
+  const [removeAllConfirm, setRemoveAllConfirm] = useState<{ show: boolean; set: string | null }>({
+    show: false,
+    set: null
   })
 
   useEffect(() => {
@@ -134,6 +139,11 @@ export default function CatalogPage() {
     setRemoveConfirm({ show: false, product: null })
   }
 
+  const isAllProductsInSetAdded = (set: string) => {
+    const setProducts = products[set] || []
+    return setProducts.length > 0 && setProducts.every(product => addedProductIds.has(product.id))
+  }
+
   const handleAddAllFromSet = async (set: string) => {
     setAddingAllFromSet(set)
 
@@ -161,6 +171,43 @@ export default function CatalogPage() {
     } finally {
       setAddingAllFromSet(null)
     }
+  }
+
+  const handleRemoveAllFromSet = async (set: string) => {
+    setRemovingAllFromSet(set)
+
+    try {
+      const response = await fetch('/api/products/remove-all-from-set', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ set }),
+      })
+
+      if (response.ok) {
+        const data = await response.json()
+        showSuccess(data.message || 'Products successfully removed from your store!')
+        // Refresh the added products list
+        fetchAddedProducts()
+      } else {
+        const error = await response.json()
+        showError(error.error || 'Failed to remove products from store')
+      }
+    } catch (error) {
+      console.error('Error removing all products from set:', error)
+      showError('Failed to remove products from store')
+    } finally {
+      setRemovingAllFromSet(null)
+    }
+  }
+
+  const confirmRemoveAll = (set: string) => {
+    setRemoveAllConfirm({ show: true, set })
+  }
+
+  const cancelRemoveAll = () => {
+    setRemoveAllConfirm({ show: false, set: null })
   }
 
 
@@ -211,14 +258,34 @@ export default function CatalogPage() {
                           <h3 className="text-lg font-medium text-gray-900">{set}</h3>
                           <p className="text-sm text-gray-500">{setProducts.length} cards available</p>
                         </div>
-                        <button
-                          onClick={() => handleAddAllFromSet(set)}
-                          disabled={addingAllFromSet === set}
-                          className="flex items-center px-4 py-2 bg-green-600 text-white text-sm font-medium rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
-                        >
-                          <Plus className="h-4 w-4 mr-2" />
-                          {addingAllFromSet === set ? 'Adding All...' : 'Add All'}
-                        </button>
+                        {isAllProductsInSetAdded(set) ? (
+                          <div className="flex space-x-2">
+                            <button
+                              disabled
+                              className="flex items-center px-4 py-2 bg-gray-400 text-white text-sm font-medium rounded-lg cursor-not-allowed"
+                            >
+                              <Plus className="h-4 w-4 mr-2" />
+                              All Added
+                            </button>
+                            <button
+                              onClick={() => confirmRemoveAll(set)}
+                              disabled={removingAllFromSet === set}
+                              className="flex items-center px-4 py-2 bg-red-600 text-white text-sm font-medium rounded-lg hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
+                            >
+                              <Trash2 className="h-4 w-4 mr-2" />
+                              {removingAllFromSet === set ? 'Removing All...' : 'Remove All'}
+                            </button>
+                          </div>
+                        ) : (
+                          <button
+                            onClick={() => handleAddAllFromSet(set)}
+                            disabled={addingAllFromSet === set}
+                            className="flex items-center px-4 py-2 bg-green-600 text-white text-sm font-medium rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
+                          >
+                            <Plus className="h-4 w-4 mr-2" />
+                            {addingAllFromSet === set ? 'Adding All...' : 'Add All'}
+                          </button>
+                        )}
                       </div>
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 p-6">
@@ -315,6 +382,41 @@ export default function CatalogPage() {
                 <button
                   onClick={cancelRemove}
                   disabled={removingFromStore === removeConfirm.product.id}
+                  className="px-4 py-2 bg-gray-300 text-gray-800 text-base font-medium rounded-md w-24 hover:bg-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-300 disabled:opacity-50"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Remove All Confirmation Dialog */}
+      {removeAllConfirm.show && removeAllConfirm.set && (
+        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+          <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+            <div className="mt-3 text-center">
+              <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100">
+                <Trash2 className="h-6 w-6 text-red-600" />
+              </div>
+              <h3 className="text-lg font-medium text-gray-900 mt-4">Remove All Products</h3>
+              <div className="mt-2 px-7 py-3">
+                <p className="text-sm text-gray-500">
+                  Are you sure you want to remove all products from &quot;{removeAllConfirm.set}&quot; from your store? This action cannot be undone.
+                </p>
+              </div>
+              <div className="items-center px-4 py-3">
+                <button
+                  onClick={() => handleRemoveAllFromSet(removeAllConfirm.set!)}
+                  disabled={removingAllFromSet === removeAllConfirm.set}
+                  className="px-4 py-2 bg-red-600 text-white text-base font-medium rounded-md w-24 mr-2 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-300 disabled:opacity-50"
+                >
+                  {removingAllFromSet === removeAllConfirm.set ? 'Removing...' : 'Remove All'}
+                </button>
+                <button
+                  onClick={cancelRemoveAll}
+                  disabled={removingAllFromSet === removeAllConfirm.set}
                   className="px-4 py-2 bg-gray-300 text-gray-800 text-base font-medium rounded-md w-24 hover:bg-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-300 disabled:opacity-50"
                 >
                   Cancel

@@ -36,27 +36,37 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 })
     }
 
-    // Delete the product from Shopify first
+    // Try to delete the product from Shopify first
     const shopifyResult = await deleteProductFromShopify(
       user.access_token,
       user.shop_domain,
       addedProduct.shopify_product_id
     )
 
-    if (!shopifyResult.success) {
-      console.error('Failed to delete product from Shopify:', shopifyResult.error)
-      return NextResponse.json(
-        { error: `Failed to delete product from Shopify: ${shopifyResult.error}` },
-        { status: 500 }
-      )
+    let shopifyMessage = ''
+
+    if (shopifyResult.success) {
+      shopifyMessage = 'Product removed from Shopify and database.'
+    } else {
+      // Check if it's a 404 error (product already deleted from Shopify)
+      if (shopifyResult.error && shopifyResult.error.includes('404')) {
+        console.log('Product already deleted from Shopify, proceeding with database cleanup')
+        shopifyMessage = 'Product was already removed from Shopify, cleaned up from database.'
+      } else {
+        console.error('Failed to delete product from Shopify:', shopifyResult.error)
+        return NextResponse.json(
+          { error: `Failed to delete product from Shopify: ${shopifyResult.error}` },
+          { status: 500 }
+        )
+      }
     }
 
-    // Remove the product from our database
+    // Remove the product from our database regardless of Shopify status
     await removeProductFromUser(session.userId, productId)
 
     return NextResponse.json({
       success: true,
-      message: 'Product removed from your store successfully'
+      message: shopifyMessage
     })
   } catch (error) {
     console.error('Error removing product from store:', error)

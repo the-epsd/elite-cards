@@ -132,8 +132,7 @@ export async function createProductVariants(productId: string, basePrice: number
   const variants = [
     { option1: 'NM', price: basePrice, sku: `NM-${productId}` },
     { option1: 'LP', price: basePrice * 0.8, sku: `LP-${productId}` },
-    { option1: 'MP', price: basePrice * 0.6, sku: `MP-${productId}` },
-    { option1: 'DMG', price: basePrice * 0.4, sku: `DMG-${productId}` }
+    { option1: 'MP', price: basePrice * 0.6, sku: `MP-${productId}` }
   ]
 
   const { data, error } = await supabase

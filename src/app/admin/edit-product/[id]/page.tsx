@@ -255,7 +255,7 @@ export default function EditProductPage() {
                         className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
                       />
                       <label htmlFor="isSingle" className="ml-2 block text-sm font-medium text-gray-700">
-                        Single (creates NM, LP, MP, DMG variants)
+                        Single (creates NM, LP, MP variants)
                       </label>
                     </div>
                     <p className="mt-1 text-sm text-gray-500">

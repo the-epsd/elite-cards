@@ -67,7 +67,7 @@ function AuthPageContent() {
             Elite Cards
           </h2>
           <p className="mt-2 text-center text-sm text-gray-600">
-            Connect your Shopify store to access premium trading cards
+            Connect your Shopify store to access Elite Cards
           </p>
         </div>
 

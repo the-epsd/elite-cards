@@ -238,8 +238,8 @@ export default function CatalogPage() {
         <main className="flex-1 py-6 px-6">
           <PageTransition>
             <div className="mb-6">
-              <h2 className="text-xl font-semibold text-gray-900">Premium Trading Cards</h2>
-              <p className="text-gray-600">Add these exclusive cards to your Shopify store with one click</p>
+              <h2 className="text-xl font-semibold text-gray-900">ELITE CARDS</h2>
+              <p className="text-gray-600">SUBHEADER</p>
             </div>
 
             <div className="space-y-8">

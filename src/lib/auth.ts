@@ -9,7 +9,7 @@ export interface UserSession {
   role: 'admin' | 'end_user'
 }
 
-const JWT_SECRET = process.env.JWT_SECRET || 'fallback-secret-key'
+const JWT_SECRET = process.env.JWT_SECRET || 'elite-cards-fallback-secret-key-12345'
 
 export function createSession(user: UserSession): string {
   console.log('Creating session with JWT_SECRET:', JWT_SECRET ? 'SET' : 'NOT SET')

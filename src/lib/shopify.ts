@@ -116,6 +116,7 @@ export function getShopifyAuthUrl(shop: string, redirectUri: string): string {
   authUrl.searchParams.set('scope', process.env.SHOPIFY_SCOPES || 'read_products,write_products')
   authUrl.searchParams.set('redirect_uri', redirectUri)
   authUrl.searchParams.set('response_type', 'code')
+  authUrl.searchParams.set('state', 'nonce') // Add state parameter for security
   return authUrl.toString()
 }
 

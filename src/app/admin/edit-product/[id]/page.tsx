@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { useRouter, useParams } from 'next/navigation'
+import Image from 'next/image'
 import { Save } from 'lucide-react'
 import Sidebar from '@/components/Sidebar'
 import SkeletonLoader from '@/components/SkeletonLoader'
@@ -281,9 +282,11 @@ export default function EditProductPage() {
                     </p>
                     {formData.imageUrl && (
                       <div className="mt-2">
-                        <img
+                        <Image
                           src={formData.imageUrl}
                           alt="Product preview"
+                          width={128}
+                          height={80}
                           className="w-32 h-20 object-cover rounded border"
                           onError={(e) => {
                             e.currentTarget.style.display = 'none'

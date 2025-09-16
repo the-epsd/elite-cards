@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
+import Image from 'next/image'
 import { Package, Users, Edit } from 'lucide-react'
 import Sidebar from '@/components/Sidebar'
 import SkeletonLoader from '@/components/SkeletonLoader'
@@ -166,9 +167,11 @@ export default function AdminPage() {
                     {products.slice(0, 5).map((product) => (
                       <div key={product.id} className="flex items-center justify-between py-2 border-b border-gray-100 last:border-b-0">
                         <div className="flex items-center space-x-3">
-                          <img
+                          <Image
                             src={product.image_url}
                             alt={product.title}
+                            width={48}
+                            height={32}
                             className="w-12 h-8 object-cover rounded"
                             onError={(e) => {
                               e.currentTarget.style.display = 'none'

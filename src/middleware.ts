@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 import { verifySession } from '@/lib/auth'
 
-export function middleware(request: NextRequest) {
+export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
 
   // Skip middleware for API routes, static files, and auth routes
@@ -29,12 +29,12 @@ export function middleware(request: NextRequest) {
   }
 
   // Verify session
-  const session = verifySession(sessionToken)
+  const session = await verifySession(sessionToken)
   console.log('Middleware - Session verification result:', !!session)
   if (session) {
     console.log('Middleware - Session details:', { userId: session.userId, shopDomain: session.shopDomain, role: session.role })
   }
-  
+
   if (!session) {
     // Invalid session, redirect to auth
     console.log('Middleware - Invalid session, redirecting to auth')

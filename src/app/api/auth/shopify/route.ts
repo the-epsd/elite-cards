@@ -83,7 +83,7 @@ export async function GET(request: NextRequest) {
     }
 
     console.log('Creating session with data:', sessionData)
-    const sessionToken = createSession(sessionData)
+    const sessionToken = await createSession(sessionData)
 
     console.log('Session created successfully')
     console.log('Session token length:', sessionToken.length)

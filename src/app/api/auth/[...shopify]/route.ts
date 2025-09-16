@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getShopifyAuthUrl, validateShopifyCallback } from '@/lib/shopify'
-import { createOrUpdateUser, createSession, setSessionCookie } from '@/lib/auth'
+import { createOrUpdateUser, createSession } from '@/lib/auth'
 
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url)
@@ -83,7 +83,7 @@ export async function GET(request: NextRequest) {
     }
 
     console.log('Creating session with data:', sessionData)
-    const sessionToken = createSession(sessionData)
+    const sessionToken = await createSession(sessionData)
 
     console.log('Session created successfully')
     console.log('Session token length:', sessionToken.length)

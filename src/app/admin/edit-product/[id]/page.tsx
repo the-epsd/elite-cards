@@ -162,7 +162,7 @@ export default function EditProductPage() {
                       required
                       value={formData.title}
                       onChange={handleChange}
-                      className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                      className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm text-gray-900"
                       placeholder="e.g., Charizard VMAX"
                     />
                   </div>
@@ -178,7 +178,7 @@ export default function EditProductPage() {
                       required
                       value={formData.description}
                       onChange={handleChange}
-                      className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                      className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm text-gray-900"
                       placeholder="Describe the card's features, rarity, and appeal..."
                     />
                   </div>
@@ -197,7 +197,7 @@ export default function EditProductPage() {
                         required
                         value={formData.price}
                         onChange={handleChange}
-                        className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                        className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm text-gray-900"
                         placeholder="29.99"
                       />
                     </div>
@@ -212,7 +212,7 @@ export default function EditProductPage() {
                         required
                         value={formData.set}
                         onChange={handleChange}
-                        className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                        className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm text-gray-900"
                       >
                         <option value="">Select a set</option>
                         <option value="Base Set">Base Set</option>
@@ -250,7 +250,7 @@ export default function EditProductPage() {
                       required
                       value={formData.imageUrl}
                       onChange={handleChange}
-                      className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                      className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm text-gray-900"
                       placeholder="https://example.com/card-image.jpg"
                     />
                     <p className="mt-1 text-sm text-gray-500">

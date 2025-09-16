@@ -55,8 +55,11 @@ export default function Sidebar({ currentPage = '' }: SidebarProps) {
       {/* Logo Section */}
       <div className="p-6 border-b border-gray-200">
         <div className="flex items-center justify-center">
-          <Package className="h-10 w-10 text-indigo-600" />
-          <h1 className="ml-3 text-xl font-bold text-gray-900">Elite Cards</h1>
+          <img
+            src="/elite.png"
+            alt="Elite Cards"
+            className="h-12 w-auto object-contain"
+          />
         </div>
       </div>
 

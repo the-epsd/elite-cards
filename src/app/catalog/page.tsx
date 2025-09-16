@@ -51,7 +51,6 @@ export default function CatalogPage() {
       const response = await fetch('/api/products/list')
       if (response.ok) {
         const data = await response.json()
-        console.log('Fetched products:', data.products)
         setProducts(data.products)
       }
     } catch (error) {
@@ -193,15 +192,11 @@ export default function CatalogPage() {
                                   console.error('Image failed to load:', product.image_url, 'for product:', product.title)
                                   e.currentTarget.style.display = 'none'
                                 }}
-                                onLoad={() => {
-                                  console.log('Image loaded successfully:', product.image_url, 'for product:', product.title)
-                                }}
                               />
                             ) : (
                               <div className="text-center">
                                 <Package className="h-12 w-12 text-gray-400 mx-auto mb-2" />
                                 <p className="text-xs text-gray-500">No image</p>
-                                <p className="text-xs text-gray-400">URL: {product.image_url || 'null'}</p>
                               </div>
                             )}
                           </div>

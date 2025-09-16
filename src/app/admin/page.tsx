@@ -48,7 +48,6 @@ export default function AdminPage() {
 
       if (productsResponse.ok) {
         const productsData = await productsResponse.json()
-        console.log('Products data received:', productsData)
         // Flatten products from grouped structure
         const allProducts = Object.values(productsData.products).flat() as Product[]
         setProducts(allProducts)
@@ -217,17 +216,9 @@ export default function AdminPage() {
                                   console.error('Admin: Image failed to load:', product.image_url, 'for product:', product.title)
                                   e.currentTarget.style.display = 'none'
                                 }}
-                                onLoad={() => {
-                                  console.log('Admin: Image loaded successfully:', product.image_url, 'for product:', product.title)
-                                }}
                               />
                             ) : (
-                              <div className="text-center">
-                                <Package className="h-4 w-4 text-gray-400" />
-                                <div className="text-xs text-gray-400 truncate" title={product.image_url || 'null'}>
-                                  {product.image_url ? 'Invalid URL' : 'No URL'}
-                                </div>
-                              </div>
+                              <Package className="h-4 w-4 text-gray-400" />
                             )}
                           </div>
                           <div>

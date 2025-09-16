@@ -17,7 +17,8 @@ export async function GET(request: NextRequest) {
 
     // Validate shop domain format
     const shopDomain = shop.includes('.') ? shop : `${shop}.myshopify.com`
-    const redirectUri = `${process.env.APP_URL}/api/auth/shopify`
+    const appUrl = process.env.APP_URL || 'https://elite-cards.vercel.app'
+    const redirectUri = `${appUrl}/api/auth/shopify`
     const authUrl = getShopifyAuthUrl(shopDomain, redirectUri)
 
     return NextResponse.redirect(authUrl)
@@ -25,11 +26,11 @@ export async function GET(request: NextRequest) {
 
   // Handle OAuth callback
   try {
-    const validation = await validateShopifyCallback({ 
-      code: code || '', 
-      shop: shop || '', 
-      hmac: hmac || '', 
-      state: state || '' 
+    const validation = await validateShopifyCallback({
+      code: code || '',
+      shop: shop || '',
+      hmac: hmac || '',
+      state: state || ''
     })
 
     if (!validation.success || !validation.session) {
@@ -57,13 +58,15 @@ export async function GET(request: NextRequest) {
     const redirectUrl = user.role === 'admin' ? '/admin' : '/catalog'
 
     // Create response with session cookie
-    const response = NextResponse.redirect(`${process.env.APP_URL}${redirectUrl}`)
+    const appUrl = process.env.APP_URL || 'https://elite-cards.vercel.app'
+    const response = NextResponse.redirect(`${appUrl}${redirectUrl}`)
     const cookieHeader = setSessionCookie(sessionToken)['Set-Cookie']
     response.headers.set('Set-Cookie', cookieHeader)
 
     return response
   } catch (error) {
     console.error('Auth error:', error)
-    return NextResponse.redirect(`${process.env.APP_URL}/auth?error=authentication_failed`)
+    const appUrl = process.env.APP_URL || 'https://elite-cards.vercel.app'
+    return NextResponse.redirect(`${appUrl}/auth?error=authentication_failed`)
   }
 }

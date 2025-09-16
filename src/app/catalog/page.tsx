@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import Image from 'next/image'
-import { ShoppingCart, Package, Trash2 } from 'lucide-react'
+import { ShoppingCart, Package, Trash2, Plus } from 'lucide-react'
 import Sidebar from '@/components/Sidebar'
 import SkeletonLoader from '@/components/SkeletonLoader'
 import PageTransition from '@/components/PageTransition'
@@ -22,6 +22,7 @@ export default function CatalogPage() {
   const [loading, setLoading] = useState(true)
   const [addingToStore, setAddingToStore] = useState<string | null>(null)
   const [removingFromStore, setRemovingFromStore] = useState<string | null>(null)
+  const [addingAllFromSet, setAddingAllFromSet] = useState<string | null>(null)
   const [addedProductIds, setAddedProductIds] = useState<Set<string>>(new Set())
   const [removeConfirm, setRemoveConfirm] = useState<{ show: boolean; product: Product | null }>({
     show: false,
@@ -131,6 +132,35 @@ export default function CatalogPage() {
     setRemoveConfirm({ show: false, product: null })
   }
 
+  const handleAddAllFromSet = async (set: string) => {
+    setAddingAllFromSet(set)
+
+    try {
+      const response = await fetch('/api/products/add-all-from-set', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ set }),
+      })
+
+      if (response.ok) {
+        const data = await response.json()
+        alert(data.message || 'Products successfully added to your store!')
+        // Refresh the added products list
+        fetchAddedProducts()
+      } else {
+        const error = await response.json()
+        alert(error.error || 'Failed to add products to store')
+      }
+    } catch (error) {
+      console.error('Error adding all products from set:', error)
+      alert('Failed to add products to store')
+    } finally {
+      setAddingAllFromSet(null)
+    }
+  }
+
 
   if (loading) {
     return (
@@ -174,8 +204,20 @@ export default function CatalogPage() {
                 Object.entries(products).map(([set, setProducts]) => (
                   <div key={set} className="bg-white rounded-lg shadow">
                     <div className="px-6 py-4 border-b border-gray-200">
-                      <h3 className="text-lg font-medium text-gray-900">{set}</h3>
-                      <p className="text-sm text-gray-500">{setProducts.length} cards available</p>
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <h3 className="text-lg font-medium text-gray-900">{set}</h3>
+                          <p className="text-sm text-gray-500">{setProducts.length} cards available</p>
+                        </div>
+                        <button
+                          onClick={() => handleAddAllFromSet(set)}
+                          disabled={addingAllFromSet === set}
+                          className="flex items-center px-4 py-2 bg-green-600 text-white text-sm font-medium rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
+                        >
+                          <Plus className="h-4 w-4 mr-2" />
+                          {addingAllFromSet === set ? 'Adding All...' : 'Add All'}
+                        </button>
+                      </div>
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 p-6">
                       {setProducts.map((product) => (

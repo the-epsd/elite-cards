@@ -29,12 +29,25 @@ export interface Product {
 
 // Database functions
 export async function createOrUpdateUser(shopDomain: string, accessToken: string, role: string): Promise<User> {
+  // First, check if user already exists
+  const existingUser = await getUserByShopDomain(shopDomain)
+
+  // If user exists and is admin, preserve admin role
+  const finalRole = existingUser?.role === 'admin' ? 'admin' : role
+
+  console.log('createOrUpdateUser:', {
+    shopDomain,
+    existingRole: existingUser?.role,
+    requestedRole: role,
+    finalRole
+  })
+
   const { data, error } = await supabase
     .from('users')
     .upsert({
       shop_domain: shopDomain,
       access_token: accessToken,
-      role: role,
+      role: finalRole,
       updated_at: new Date().toISOString()
     }, {
       onConflict: 'shop_domain'
@@ -46,6 +59,7 @@ export async function createOrUpdateUser(shopDomain: string, accessToken: string
     throw new Error(`Failed to create/update user: ${error.message}`)
   }
 
+  console.log('User created/updated with role:', data.role)
   return data
 }
 

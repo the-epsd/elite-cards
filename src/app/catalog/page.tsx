@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import Image from 'next/image'
 import { ShoppingCart, Package } from 'lucide-react'
 import Sidebar from '@/components/Sidebar'
 import SkeletonLoader from '@/components/SkeletonLoader'
@@ -134,9 +135,11 @@ export default function CatalogPage() {
                       {setProducts.map((product) => (
                         <div key={product.id} className="border rounded-lg overflow-hidden hover:shadow-lg transition-shadow">
                           {product.image_url ? (
-                            <img
+                            <Image
                               src={product.image_url}
                               alt={product.title}
+                              width={300}
+                              height={192}
                               className="w-full h-48 object-cover"
                               onError={(e) => {
                                 console.error('Image failed to load:', product.image_url)

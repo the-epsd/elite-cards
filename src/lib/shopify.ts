@@ -79,7 +79,24 @@ export async function createProductInShopify(
     })
 
     // Use direct REST API call instead of Shopify SDK
-    let productPayload: any = {
+    const productPayload: {
+      product: {
+        title: string
+        body_html: string
+        vendor: string
+        product_type: string
+        tags: string
+        images: Array<{ src: string; alt: string }>
+        options?: Array<{ name: string }>
+        variants: Array<{
+          option1?: string
+          price: string
+          sku?: string
+          inventory_management: string
+          inventory_quantity: number
+        }>
+      }
+    } = {
       product: {
         title: productData.title,
         body_html: productData.description,
@@ -92,6 +109,7 @@ export async function createProductInShopify(
             alt: productData.title,
           },
         ],
+        variants: [] // Initialize with empty array, will be populated below
       }
     }
 

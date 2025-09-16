@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
+import Image from 'next/image'
 import { Package, Users, Plus, LogOut, BarChart3 } from 'lucide-react'
 
 interface UserSession {
@@ -55,9 +56,11 @@ export default function Sidebar({ currentPage = '' }: SidebarProps) {
       {/* Logo Section */}
       <div className="p-6 border-b border-gray-200">
         <div className="flex items-center justify-center">
-          <img
+          <Image
             src="/elite.png"
             alt="Elite Cards"
+            width={200}
+            height={48}
             className="h-12 w-auto object-contain"
           />
         </div>

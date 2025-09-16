@@ -66,40 +66,64 @@ export async function createProductInShopify(
   }
 ): Promise<{ success: boolean; productId?: string; error?: string }> {
   try {
-    const session = {
-      shop: shopDomain,
-      accessToken: accessToken,
-    }
-
-    const product: ShopifyProduct = {
+    console.log('Creating product in Shopify:', {
+      shopDomain,
       title: productData.title,
-      body_html: productData.description,
-      vendor: 'Elite Cards',
-      product_type: 'Trading Cards',
-      tags: `elite-cards,${productData.set}`,
-      variants: [
-        {
-          price: productData.price.toString(),
-          inventory_management: 'shopify',
-          inventory_quantity: 100,
-        },
-      ],
-      images: [
-        {
-          src: productData.imageUrl,
-          alt: productData.title,
-        },
-      ],
+      price: productData.price
+    })
+
+    // Use direct REST API call instead of Shopify SDK
+    const productPayload = {
+      product: {
+        title: productData.title,
+        body_html: productData.description,
+        vendor: 'Elite Cards',
+        product_type: 'Trading Cards',
+        tags: `elite-cards,${productData.set}`,
+        variants: [
+          {
+            price: productData.price.toString(),
+            inventory_management: 'shopify',
+            inventory_quantity: 100,
+          },
+        ],
+        images: [
+          {
+            src: productData.imageUrl,
+            alt: productData.title,
+          },
+        ],
+      }
     }
 
-    const response = await shopify.rest.Product.save({
-      session,
-      product,
+    const response = await fetch(`https://${shopDomain}/admin/api/2024-01/products.json`, {
+      method: 'POST',
+      headers: {
+        'X-Shopify-Access-Token': accessToken,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(productPayload),
     })
+
+    if (!response.ok) {
+      const errorText = await response.text()
+      console.error('Shopify API error:', {
+        status: response.status,
+        statusText: response.statusText,
+        error: errorText
+      })
+      return {
+        success: false,
+        error: `Shopify API error: ${response.status} ${errorText}`,
+      }
+    }
+
+    const result = await response.json()
+    console.log('Product created successfully:', result.product.id)
 
     return {
       success: true,
-      productId: response.id?.toString(),
+      productId: result.product.id?.toString(),
     }
   } catch (error) {
     console.error('Error creating product in Shopify:', error)

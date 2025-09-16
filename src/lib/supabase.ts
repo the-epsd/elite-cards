@@ -31,8 +31,11 @@ export interface Product {
 export interface ProductVariant {
   id: string
   product_id: string
-  condition: string
+  option1: string
+  option2?: string
+  option3?: string
   price: number
+  sku?: string
   created_at: string
   updated_at: string
 }
@@ -127,10 +130,10 @@ export async function createProduct(productData: {
 
 export async function createProductVariants(productId: string, basePrice: number): Promise<ProductVariant[]> {
   const variants = [
-    { condition: 'NM', price: basePrice },
-    { condition: 'LP', price: basePrice * 0.8 },
-    { condition: 'MP', price: basePrice * 0.6 },
-    { condition: 'DMG', price: basePrice * 0.4 }
+    { option1: 'NM', price: basePrice, sku: `NM-${productId}` },
+    { option1: 'LP', price: basePrice * 0.8, sku: `LP-${productId}` },
+    { option1: 'MP', price: basePrice * 0.6, sku: `MP-${productId}` },
+    { option1: 'DMG', price: basePrice * 0.4, sku: `DMG-${productId}` }
   ]
 
   const { data, error } = await supabase
@@ -138,8 +141,9 @@ export async function createProductVariants(productId: string, basePrice: number
     .insert(
       variants.map(variant => ({
         product_id: productId,
-        condition: variant.condition,
+        option1: variant.option1,
         price: variant.price,
+        sku: variant.sku,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
       }))
@@ -148,6 +152,20 @@ export async function createProductVariants(productId: string, basePrice: number
 
   if (error) {
     throw new Error(`Failed to create product variants: ${error.message}`)
+  }
+
+  return data || []
+}
+
+export async function getProductVariants(productId: string): Promise<ProductVariant[]> {
+  const { data, error } = await supabase
+    .from('product_variants')
+    .select('*')
+    .eq('product_id', productId)
+    .order('option1')
+
+  if (error) {
+    throw new Error(`Failed to get product variants: ${error.message}`)
   }
 
   return data || []

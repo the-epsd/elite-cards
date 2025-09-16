@@ -63,6 +63,12 @@ export async function createProductInShopify(
     price: number
     imageUrl: string
     set: string
+    is_single?: boolean
+    variants?: Array<{
+      option1: string
+      price: number
+      sku?: string
+    }>
   }
 ): Promise<{ success: boolean; productId?: string; error?: string }> {
   try {
@@ -73,20 +79,13 @@ export async function createProductInShopify(
     })
 
     // Use direct REST API call instead of Shopify SDK
-    const productPayload = {
+    let productPayload: any = {
       product: {
         title: productData.title,
         body_html: productData.description,
         vendor: 'Elite Cards',
         product_type: 'Trading Cards',
         tags: `elite-cards,${productData.set}`,
-        variants: [
-          {
-            price: productData.price.toString(),
-            inventory_management: 'shopify',
-            inventory_quantity: 0,
-          },
-        ],
         images: [
           {
             src: productData.imageUrl,
@@ -94,6 +93,30 @@ export async function createProductInShopify(
           },
         ],
       }
+    }
+
+    // Handle variants based on whether it's a single card
+    if (productData.is_single && productData.variants && productData.variants.length > 0) {
+      // Single card with condition variants
+      productPayload.product.options = [
+        { name: 'Condition' }
+      ]
+      productPayload.product.variants = productData.variants.map(variant => ({
+        option1: variant.option1,
+        price: variant.price.toString(),
+        sku: variant.sku,
+        inventory_management: 'shopify',
+        inventory_quantity: 0,
+      }))
+    } else {
+      // Regular product with single variant
+      productPayload.product.variants = [
+        {
+          price: productData.price.toString(),
+          inventory_management: 'shopify',
+          inventory_quantity: 0,
+        },
+      ]
     }
 
     const response = await fetch(`https://${shopDomain}/admin/api/2024-01/products.json`, {

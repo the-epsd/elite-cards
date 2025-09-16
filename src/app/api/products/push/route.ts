@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getSessionFromRequest, getUserFromSession } from '@/lib/auth'
-import { supabase, addProductToUser, isProductAddedByUser } from '@/lib/supabase'
+import { supabase, addProductToUser, isProductAddedByUser, getProductVariants } from '@/lib/supabase'
 import { createProductInShopify } from '@/lib/shopify'
 
 export async function POST(request: NextRequest) {
@@ -50,6 +50,12 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 })
     }
 
+    // Get variants if this is a single card
+    let variants = undefined
+    if (product.is_single) {
+      variants = await getProductVariants(productId)
+    }
+
     // Push product to Shopify
     const result = await createProductInShopify(
       user.access_token,
@@ -60,6 +66,8 @@ export async function POST(request: NextRequest) {
         price: product.price,
         imageUrl: product.image_url,
         set: product.set,
+        is_single: product.is_single,
+        variants: variants,
       }
     )
 

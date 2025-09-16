@@ -26,6 +26,13 @@ export async function GET(request: NextRequest) {
 
   // Handle OAuth callback
   try {
+    console.log('OAuth callback received:', { code, shop, hmac, state })
+    console.log('Environment check:', {
+      hasApiKey: !!process.env.SHOPIFY_API_KEY,
+      hasApiSecret: !!process.env.SHOPIFY_API_SECRET_KEY,
+      apiKey: process.env.SHOPIFY_API_KEY?.substring(0, 8) + '...',
+    })
+
     const validation = await validateShopifyCallback({
       code: code || '',
       shop: shop || '',
@@ -33,7 +40,10 @@ export async function GET(request: NextRequest) {
       state: state || ''
     })
 
+    console.log('Validation result:', validation)
+
     if (!validation.success || !validation.session) {
+      console.error('Validation failed:', validation.error)
       return NextResponse.json({ error: validation.error || 'Invalid callback' }, { status: 400 })
     }
 

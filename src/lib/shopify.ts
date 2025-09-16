@@ -138,6 +138,18 @@ export async function validateShopifyCallback(
     // For now, we'll skip HMAC validation for simplicity
     // In production, you should validate the HMAC signature
 
+    // Check if environment variables are set
+    if (!process.env.SHOPIFY_API_KEY || !process.env.SHOPIFY_API_SECRET_KEY) {
+      console.error('Missing environment variables:', {
+        hasApiKey: !!process.env.SHOPIFY_API_KEY,
+        hasApiSecret: !!process.env.SHOPIFY_API_SECRET_KEY,
+      })
+      return {
+        success: false,
+        error: 'Missing Shopify API credentials. Please check environment variables.',
+      }
+    }
+
     // Exchange code for access token
     const tokenResponse = await fetch(`https://${shop}/admin/oauth/access_token`, {
       method: 'POST',
@@ -145,8 +157,8 @@ export async function validateShopifyCallback(
         'Content-Type': 'application/x-www-form-urlencoded',
       },
       body: new URLSearchParams({
-        client_id: process.env.SHOPIFY_API_KEY!,
-        client_secret: process.env.SHOPIFY_API_SECRET_KEY!,
+        client_id: process.env.SHOPIFY_API_KEY,
+        client_secret: process.env.SHOPIFY_API_SECRET_KEY,
         code: code as string,
       }),
     })

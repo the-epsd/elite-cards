@@ -7,6 +7,7 @@ import { Package, Users, Edit, Trash2 } from 'lucide-react'
 import Sidebar from '@/components/Sidebar'
 import SkeletonLoader from '@/components/SkeletonLoader'
 import PageTransition from '@/components/PageTransition'
+import { useNotification } from '@/contexts/NotificationContext'
 
 interface Product {
   id: string
@@ -25,6 +26,7 @@ interface User {
 }
 
 export default function AdminPage() {
+  const { showSuccess, showError } = useNotification()
   const [products, setProducts] = useState<Product[]>([])
   const [users, setUsers] = useState<User[]>([])
   const [loading, setLoading] = useState(true)
@@ -75,14 +77,14 @@ export default function AdminPage() {
         // Remove the product from the local state
         setProducts(products.filter(product => product.id !== productId))
         setDeleteConfirm({ show: false, product: null })
-        alert('Product deleted successfully!')
+        showSuccess('Product deleted successfully!')
       } else {
         const error = await response.json()
-        alert(`Error: ${error.error}`)
+        showError(`Error: ${error.error}`)
       }
     } catch (error) {
       console.error('Error deleting product:', error)
-      alert('Failed to delete product')
+      showError('Failed to delete product')
     } finally {
       setDeleting(false)
     }

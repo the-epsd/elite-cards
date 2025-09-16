@@ -4,8 +4,10 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Sidebar from '@/components/Sidebar'
 import PageTransition from '@/components/PageTransition'
+import { useNotification } from '@/contexts/NotificationContext'
 
 export default function CreateProductPage() {
+  const { showSuccess, showError } = useNotification()
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -31,15 +33,15 @@ export default function CreateProductPage() {
       })
 
       if (response.ok) {
-        alert('Product created successfully!')
+        showSuccess('Product created successfully!')
         router.push('/admin')
       } else {
         const error = await response.json()
-        alert(`Error: ${error.error}`)
+        showError(`Error: ${error.error}`)
       }
     } catch (error) {
       console.error('Error creating product:', error)
-      alert('Failed to create product')
+      showError('Failed to create product')
     } finally {
       setLoading(false)
     }

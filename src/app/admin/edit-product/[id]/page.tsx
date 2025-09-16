@@ -7,6 +7,7 @@ import { Save } from 'lucide-react'
 import Sidebar from '@/components/Sidebar'
 import SkeletonLoader from '@/components/SkeletonLoader'
 import PageTransition from '@/components/PageTransition'
+import { useNotification } from '@/contexts/NotificationContext'
 
 interface Product {
   id: string
@@ -21,6 +22,7 @@ interface Product {
 }
 
 export default function EditProductPage() {
+  const { showSuccess, showError } = useNotification()
   const [product, setProduct] = useState<Product | null>(null)
   const [formData, setFormData] = useState({
     title: '',
@@ -52,16 +54,16 @@ export default function EditProductPage() {
           isSingle: productData.is_single || false
         })
       } else {
-        alert('Product not found')
+        showError('Product not found')
         router.push('/admin')
       }
     } catch (error) {
       console.error('Error fetching product:', error)
-      alert('Failed to fetch product')
+      showError('Failed to fetch product')
     } finally {
       setLoading(false)
     }
-  }, [productId, router])
+  }, [productId, router, showError])
 
   useEffect(() => {
     if (productId) {
@@ -86,15 +88,15 @@ export default function EditProductPage() {
       })
 
       if (response.ok) {
-        alert('Product updated successfully!')
+        showSuccess('Product updated successfully!')
         router.push('/admin')
       } else {
         const error = await response.json()
-        alert(`Error: ${error.error}`)
+        showError(`Error: ${error.error}`)
       }
     } catch (error) {
       console.error('Error updating product:', error)
-      alert('Failed to update product')
+      showError('Failed to update product')
     } finally {
       setSaving(false)
     }
@@ -265,30 +267,30 @@ export default function EditProductPage() {
                             onChange={handleChange}
                             className="w-full px-4 py-3 border border-gray-200 rounded-xl shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-gray-900 transition-all duration-200 hover:border-gray-300"
                           >
-                        <option value="">Select a set</option>
-                        <option value="Base Set">Base Set</option>
-                        <option value="Jungle">Jungle</option>
-                        <option value="Fossil">Fossil</option>
-                        <option value="Team Rocket">Team Rocket</option>
-                        <option value="Gym Heroes">Gym Heroes</option>
-                        <option value="Gym Challenge">Gym Challenge</option>
-                        <option value="Neo Genesis">Neo Genesis</option>
-                        <option value="Neo Discovery">Neo Discovery</option>
-                        <option value="Neo Revelation">Neo Revelation</option>
-                        <option value="Neo Destiny">Neo Destiny</option>
-                        <option value="Expedition">Expedition</option>
-                        <option value="Aquapolis">Aquapolis</option>
-                        <option value="Skyridge">Skyridge</option>
-                        <option value="Ruby & Sapphire">Ruby & Sapphire</option>
-                        <option value="Diamond & Pearl">Diamond & Pearl</option>
-                        <option value="Black & White">Black & White</option>
-                        <option value="XY">XY</option>
-                        <option value="Sun & Moon">Sun & Moon</option>
-                        <option value="Sword & Shield">Sword & Shield</option>
-                        <option value="Scarlet & Violet">Scarlet & Violet</option>
-                      </select>
-                    </div>
-                  </div>
+                            <option value="">Select a set</option>
+                            <option value="Base Set">Base Set</option>
+                            <option value="Jungle">Jungle</option>
+                            <option value="Fossil">Fossil</option>
+                            <option value="Team Rocket">Team Rocket</option>
+                            <option value="Gym Heroes">Gym Heroes</option>
+                            <option value="Gym Challenge">Gym Challenge</option>
+                            <option value="Neo Genesis">Neo Genesis</option>
+                            <option value="Neo Discovery">Neo Discovery</option>
+                            <option value="Neo Revelation">Neo Revelation</option>
+                            <option value="Neo Destiny">Neo Destiny</option>
+                            <option value="Expedition">Expedition</option>
+                            <option value="Aquapolis">Aquapolis</option>
+                            <option value="Skyridge">Skyridge</option>
+                            <option value="Ruby & Sapphire">Ruby & Sapphire</option>
+                            <option value="Diamond & Pearl">Diamond & Pearl</option>
+                            <option value="Black & White">Black & White</option>
+                            <option value="XY">XY</option>
+                            <option value="Sun & Moon">Sun & Moon</option>
+                            <option value="Sword & Shield">Sword & Shield</option>
+                            <option value="Scarlet & Violet">Scarlet & Violet</option>
+                          </select>
+                        </div>
+                      </div>
 
                       <div className="bg-gray-50 rounded-xl p-6 space-y-4">
                         <div className="flex items-start space-x-3">

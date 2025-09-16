@@ -6,6 +6,7 @@ import { ShoppingCart, Package, Trash2, Plus } from 'lucide-react'
 import Sidebar from '@/components/Sidebar'
 import SkeletonLoader from '@/components/SkeletonLoader'
 import PageTransition from '@/components/PageTransition'
+import { useNotification } from '@/contexts/NotificationContext'
 
 interface Product {
   id: string
@@ -18,6 +19,7 @@ interface Product {
 }
 
 export default function CatalogPage() {
+  const { showSuccess, showError } = useNotification()
   const [products, setProducts] = useState<Record<string, Product[]>>({})
   const [loading, setLoading] = useState(true)
   const [addingToStore, setAddingToStore] = useState<string | null>(null)
@@ -75,16 +77,16 @@ export default function CatalogPage() {
 
       if (response.ok) {
         const data = await response.json()
-        alert(data.message || 'Product successfully added to your store!')
+        showSuccess(data.message || 'Product successfully added to your store!')
         // Update the added products list
         setAddedProductIds(prev => new Set([...prev, productId]))
       } else {
         const error = await response.json()
-        alert(error.error || 'Failed to add product to store')
+        showError(error.error || 'Failed to add product to store')
       }
     } catch (error) {
       console.error('Error adding product to store:', error)
-      alert('Failed to add product to store')
+      showError('Failed to add product to store')
     } finally {
       setAddingToStore(null)
     }
@@ -104,7 +106,7 @@ export default function CatalogPage() {
 
       if (response.ok) {
         const data = await response.json()
-        alert(data.message || 'Product removed from your store!')
+        showSuccess(data.message || 'Product removed from your store!')
         // Update the added products list
         setAddedProductIds(prev => {
           const newSet = new Set(prev)
@@ -114,11 +116,11 @@ export default function CatalogPage() {
         setRemoveConfirm({ show: false, product: null })
       } else {
         const error = await response.json()
-        alert(error.error || 'Failed to remove product from store')
+        showError(error.error || 'Failed to remove product from store')
       }
     } catch (error) {
       console.error('Error removing product from store:', error)
-      alert('Failed to remove product from store')
+      showError('Failed to remove product from store')
     } finally {
       setRemovingFromStore(null)
     }
@@ -146,16 +148,16 @@ export default function CatalogPage() {
 
       if (response.ok) {
         const data = await response.json()
-        alert(data.message || 'Products successfully added to your store!')
+        showSuccess(data.message || 'Products successfully added to your store!')
         // Refresh the added products list
         fetchAddedProducts()
       } else {
         const error = await response.json()
-        alert(error.error || 'Failed to add products to store')
+        showError(error.error || 'Failed to add products to store')
       }
     } catch (error) {
       console.error('Error adding all products from set:', error)
-      alert('Failed to add products to store')
+      showError('Failed to add products to store')
     } finally {
       setAddingAllFromSet(null)
     }

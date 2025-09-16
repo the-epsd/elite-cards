@@ -9,6 +9,6 @@ export default async function Home() {
     redirect(session.role === 'admin' ? '/admin' : '/catalog')
   }
 
-  // If no session, redirect to login
-  redirect('/auth/login')
+  // If no session, redirect to auth
+  redirect('/auth')
 }

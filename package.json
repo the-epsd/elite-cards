@@ -13,6 +13,7 @@
     "db:studio": "prisma studio"
   },
   "dependencies": {
+    "@bluebeela/nextjs-shopify-auth": "^1.0.2",
     "@prisma/client": "^6.16.1",
     "@shopify/shopify-api": "^11.14.1",
     "@types/crypto-js": "^4.2.2",

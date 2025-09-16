@@ -10,7 +10,7 @@ export function middleware(request: NextRequest) {
     pathname.startsWith('/api/') ||
     pathname.startsWith('/_next/') ||
     pathname.startsWith('/favicon.ico') ||
-    pathname.startsWith('/auth/')
+    pathname.startsWith('/auth')
   ) {
     return NextResponse.next()
   }
@@ -19,15 +19,19 @@ export function middleware(request: NextRequest) {
   const sessionToken = request.cookies.get('session')?.value
 
   if (!sessionToken) {
-    // No session, redirect to login
-    return NextResponse.redirect(new URL('/auth/login', request.url))
+    // No session, redirect to auth
+    const shop = request.nextUrl.searchParams.get('shop')
+    const authUrl = shop ? `/auth?shop=${shop}` : '/auth'
+    return NextResponse.redirect(new URL(authUrl, request.url))
   }
 
   // Verify session
   const session = verifySession(sessionToken)
   if (!session) {
-    // Invalid session, redirect to login
-    const response = NextResponse.redirect(new URL('/auth/login', request.url))
+    // Invalid session, redirect to auth
+    const shop = request.nextUrl.searchParams.get('shop')
+    const authUrl = shop ? `/auth?shop=${shop}` : '/auth'
+    const response = NextResponse.redirect(new URL(authUrl, request.url))
     response.cookies.delete('session')
     return response
   }

@@ -7,12 +7,12 @@ let shopifyInstance: ReturnType<typeof shopifyApi> | null = null
 function getShopifyInstance() {
   if (!shopifyInstance) {
     const apiKey = process.env.SHOPIFY_API_KEY
-    const apiSecretKey = process.env.SHOPIFY_API_SECRET
-
+    const apiSecretKey = process.env.SHOPIFY_API_SECRET_KEY
+    
     if (!apiKey || !apiSecretKey) {
-      throw new Error('Missing Shopify API credentials. Please set SHOPIFY_API_KEY and SHOPIFY_API_SECRET environment variables.')
+      throw new Error('Missing Shopify API credentials. Please set SHOPIFY_API_KEY and SHOPIFY_API_SECRET_KEY environment variables.')
     }
-
+    
     shopifyInstance = shopifyApi({
       apiKey,
       apiSecretKey,
@@ -22,7 +22,7 @@ function getShopifyInstance() {
       isEmbeddedApp: true,
     })
   }
-
+  
   return shopifyInstance
 }
 
@@ -144,7 +144,7 @@ export async function validateShopifyCallback(
       },
       body: JSON.stringify({
         client_id: process.env.SHOPIFY_API_KEY,
-        client_secret: process.env.SHOPIFY_API_SECRET,
+        client_secret: process.env.SHOPIFY_API_SECRET_KEY,
         code: code as string,
       }),
     })

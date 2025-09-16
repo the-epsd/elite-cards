@@ -84,7 +84,7 @@ export async function createProductInShopify(
           {
             price: productData.price.toString(),
             inventory_management: 'shopify',
-            inventory_quantity: 100,
+            inventory_quantity: 0,
           },
         ],
         images: [

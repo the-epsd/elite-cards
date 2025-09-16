@@ -26,11 +26,13 @@ export async function GET(request: NextRequest) {
 
   // Handle OAuth callback
   try {
+    console.log('=== OAUTH CALLBACK START ===')
     console.log('OAuth callback received:', { code, shop, hmac, state })
     console.log('Environment check:', {
       hasApiKey: !!process.env.SHOPIFY_API_KEY,
       hasApiSecret: !!process.env.SHOPIFY_API_SECRET_KEY,
       apiKey: process.env.SHOPIFY_API_KEY?.substring(0, 8) + '...',
+      jwtSecret: process.env.JWT_SECRET ? 'SET' : 'NOT SET',
     })
 
     const validation = await validateShopifyCallback({
@@ -74,10 +76,18 @@ export async function GET(request: NextRequest) {
     // Create response with session cookie
     const appUrl = process.env.APP_URL || 'https://elite-cards.vercel.app'
     const response = NextResponse.redirect(`${appUrl}${redirectUrl}`)
-    const cookieHeader = setSessionCookie(sessionToken)['Set-Cookie']
-    response.headers.set('Set-Cookie', cookieHeader)
+    
+    // Set the session cookie directly
+    response.cookies.set('session', sessionToken, {
+      httpOnly: true,
+      secure: true,
+      sameSite: 'lax',
+      path: '/',
+      maxAge: 7 * 24 * 60 * 60 // 7 days
+    })
 
-    console.log('Cookie header set:', cookieHeader.substring(0, 100) + '...')
+    console.log('Cookie set directly on response')
+    console.log('=== OAUTH CALLBACK END - REDIRECTING TO:', `${appUrl}${redirectUrl}`)
 
     return response
   } catch (error) {

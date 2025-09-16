@@ -1,12 +1,10 @@
 'use client'
 
 import { useState } from 'react'
-import { useRouter } from 'next/navigation'
 
 export default function LoginPage() {
   const [shop, setShop] = useState('')
   const [loading, setLoading] = useState(false)
-  const router = useRouter()
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -65,7 +63,7 @@ export default function LoginPage() {
 
         <div className="text-center">
           <p className="text-sm text-gray-600">
-            Don't have a Shopify store?{' '}
+            Don&apos;t have a Shopify store?{' '}
             <a
               href="https://www.shopify.com"
               target="_blank"

@@ -2,6 +2,11 @@ import { NextRequest, NextResponse } from 'next/server'
 import { validateShopifyCallback } from '@/lib/shopify'
 import { createOrUpdateUser, createSession, setSessionCookie } from '@/lib/auth'
 
+interface ShopifySession {
+  shop: string
+  accessToken: string
+}
+
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url)
 
@@ -14,8 +19,8 @@ export async function GET(request: NextRequest) {
     }
 
     const { session } = validation
-    const shopDomain = session.shop
-    const accessToken = session.accessToken
+    const shopDomain = (session as ShopifySession).shop
+    const accessToken = (session as ShopifySession).accessToken
 
     // Determine user role (you can implement logic here to determine if user is admin)
     // For now, we'll default to 'end_user' and allow manual admin assignment
@@ -35,7 +40,8 @@ export async function GET(request: NextRequest) {
     const redirectUrl = user.role === 'admin' ? '/admin' : '/catalog'
 
     const response = NextResponse.redirect(`${process.env.APP_URL}${redirectUrl}`)
-    response.headers.set('Set-Cookie', setSessionCookie(sessionToken).['Set-Cookie'])
+    const cookieHeader = setSessionCookie(sessionToken)['Set-Cookie']
+    response.headers.set('Set-Cookie', cookieHeader)
 
     return response
   } catch (error) {

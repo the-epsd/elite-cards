@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
+import Image from 'next/image'
 import { ShoppingCart, LogOut, Package } from 'lucide-react'
 
 interface Product {
@@ -125,9 +126,11 @@ export default function CatalogPage() {
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 p-6">
                     {setProducts.map((product) => (
                       <div key={product.id} className="border rounded-lg overflow-hidden hover:shadow-lg transition-shadow">
-                        <img
+                        <Image
                           src={product.imageUrl}
                           alt={product.title}
+                          width={300}
+                          height={192}
                           className="w-full h-48 object-cover"
                         />
                         <div className="p-4">

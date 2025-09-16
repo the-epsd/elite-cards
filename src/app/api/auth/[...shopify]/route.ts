@@ -11,6 +11,7 @@ export async function GET(request: NextRequest) {
   
   console.log('=== OAUTH ROUTE CALLED ===')
   console.log('URL:', request.url)
+  console.log('Full search params:', Object.fromEntries(searchParams.entries()))
   console.log('Search params:', { shop, code: code?.substring(0, 10) + '...', hmac: hmac?.substring(0, 10) + '...', state })
 
   // If no code, start OAuth flow

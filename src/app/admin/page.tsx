@@ -48,6 +48,7 @@ export default function AdminPage() {
 
       if (productsResponse.ok) {
         const productsData = await productsResponse.json()
+        console.log('Products data received:', productsData)
         // Flatten products from grouped structure
         const allProducts = Object.values(productsData.products).flat() as Product[]
         setProducts(allProducts)
@@ -205,7 +206,7 @@ export default function AdminPage() {
                       <div key={product.id} className="flex items-center justify-between py-2 border-b border-gray-100 last:border-b-0">
                         <div className="flex items-center space-x-3">
                           <div className="w-12 h-8 bg-gray-200 rounded flex items-center justify-center overflow-hidden">
-                            {product.image_url ? (
+                            {product.image_url && product.image_url.trim() !== '' ? (
                               <Image
                                 src={product.image_url}
                                 alt={product.title}
@@ -213,11 +214,20 @@ export default function AdminPage() {
                                 height={32}
                                 className="w-full h-full object-cover"
                                 onError={(e) => {
+                                  console.error('Admin: Image failed to load:', product.image_url, 'for product:', product.title)
                                   e.currentTarget.style.display = 'none'
+                                }}
+                                onLoad={() => {
+                                  console.log('Admin: Image loaded successfully:', product.image_url, 'for product:', product.title)
                                 }}
                               />
                             ) : (
-                              <Package className="h-4 w-4 text-gray-400" />
+                              <div className="text-center">
+                                <Package className="h-4 w-4 text-gray-400" />
+                                <div className="text-xs text-gray-400 truncate" title={product.image_url || 'null'}>
+                                  {product.image_url ? 'Invalid URL' : 'No URL'}
+                                </div>
+                              </div>
                             )}
                           </div>
                           <div>

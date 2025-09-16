@@ -182,7 +182,7 @@ export default function CatalogPage() {
                       {setProducts.map((product) => (
                         <div key={product.id} className="border rounded-lg overflow-hidden hover:shadow-lg transition-shadow">
                           <div className="aspect-square bg-gray-200 flex items-center justify-center overflow-hidden">
-                            {product.image_url ? (
+                            {product.image_url && product.image_url.trim() !== '' ? (
                               <Image
                                 src={product.image_url}
                                 alt={product.title}
@@ -190,16 +190,19 @@ export default function CatalogPage() {
                                 height={300}
                                 className="w-full h-full object-cover"
                                 onError={(e) => {
-                                  console.error('Image failed to load:', product.image_url)
+                                  console.error('Image failed to load:', product.image_url, 'for product:', product.title)
                                   e.currentTarget.style.display = 'none'
                                 }}
                                 onLoad={() => {
-                                  console.log('Image loaded successfully:', product.image_url)
+                                  console.log('Image loaded successfully:', product.image_url, 'for product:', product.title)
                                 }}
                               />
-                            ) : null}
-                            {!product.image_url && (
-                              <Package className="h-12 w-12 text-gray-400" />
+                            ) : (
+                              <div className="text-center">
+                                <Package className="h-12 w-12 text-gray-400 mx-auto mb-2" />
+                                <p className="text-xs text-gray-500">No image</p>
+                                <p className="text-xs text-gray-400">URL: {product.image_url || 'null'}</p>
+                              </div>
                             )}
                           </div>
                           <div className="p-4">

@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import Image from 'next/image'
-import { ShoppingCart, Package } from 'lucide-react'
+import { ShoppingCart, Package, Trash2 } from 'lucide-react'
 import Sidebar from '@/components/Sidebar'
 import SkeletonLoader from '@/components/SkeletonLoader'
 import PageTransition from '@/components/PageTransition'
@@ -21,7 +21,12 @@ export default function CatalogPage() {
   const [products, setProducts] = useState<Record<string, Product[]>>({})
   const [loading, setLoading] = useState(true)
   const [addingToStore, setAddingToStore] = useState<string | null>(null)
+  const [removingFromStore, setRemovingFromStore] = useState<string | null>(null)
   const [addedProductIds, setAddedProductIds] = useState<Set<string>>(new Set())
+  const [removeConfirm, setRemoveConfirm] = useState<{ show: boolean; product: Product | null }>({
+    show: false,
+    product: null
+  })
 
   useEffect(() => {
     fetchProducts()
@@ -83,6 +88,48 @@ export default function CatalogPage() {
     } finally {
       setAddingToStore(null)
     }
+  }
+
+  const handleRemoveFromStore = async (productId: string) => {
+    setRemovingFromStore(productId)
+
+    try {
+      const response = await fetch('/api/products/remove', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ productId }),
+      })
+
+      if (response.ok) {
+        const data = await response.json()
+        alert(data.message || 'Product removed from your store!')
+        // Update the added products list
+        setAddedProductIds(prev => {
+          const newSet = new Set(prev)
+          newSet.delete(productId)
+          return newSet
+        })
+        setRemoveConfirm({ show: false, product: null })
+      } else {
+        const error = await response.json()
+        alert(error.error || 'Failed to remove product from store')
+      }
+    } catch (error) {
+      console.error('Error removing product from store:', error)
+      alert('Failed to remove product from store')
+    } finally {
+      setRemovingFromStore(null)
+    }
+  }
+
+  const confirmRemove = (product: Product) => {
+    setRemoveConfirm({ show: true, product })
+  }
+
+  const cancelRemove = () => {
+    setRemoveConfirm({ show: false, product: null })
   }
 
 
@@ -160,13 +207,23 @@ export default function CatalogPage() {
                             <div className="flex items-center justify-between">
                               <span className="text-lg font-semibold text-indigo-600">${product.price}</span>
                               {addedProductIds.has(product.id) ? (
-                                <button
-                                  disabled
-                                  className="flex items-center px-3 py-2 bg-gray-400 text-white text-sm rounded-md cursor-not-allowed"
-                                >
-                                  <ShoppingCart className="h-4 w-4 mr-1" />
-                                  Added
-                                </button>
+                                <div className="flex space-x-2">
+                                  <button
+                                    disabled
+                                    className="flex items-center px-3 py-2 bg-gray-400 text-white text-sm rounded-md cursor-not-allowed"
+                                  >
+                                    <ShoppingCart className="h-4 w-4 mr-1" />
+                                    Added
+                                  </button>
+                                  <button
+                                    onClick={() => confirmRemove(product)}
+                                    disabled={removingFromStore === product.id}
+                                    className="flex items-center px-3 py-2 bg-red-600 text-white text-sm rounded-md hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                                    title="Remove from store"
+                                  >
+                                    <Trash2 className="h-4 w-4" />
+                                  </button>
+                                </div>
                               ) : (
                                 <button
                                   onClick={() => handleAddToStore(product.id)}
@@ -189,6 +246,41 @@ export default function CatalogPage() {
           </PageTransition>
         </main>
       </div>
+
+      {/* Remove Confirmation Dialog */}
+      {removeConfirm.show && removeConfirm.product && (
+        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+          <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+            <div className="mt-3 text-center">
+              <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100">
+                <Trash2 className="h-6 w-6 text-red-600" />
+              </div>
+              <h3 className="text-lg font-medium text-gray-900 mt-4">Remove Product</h3>
+              <div className="mt-2 px-7 py-3">
+                <p className="text-sm text-gray-500">
+                  Are you sure you want to remove &quot;{removeConfirm.product.title}&quot; from your store? This action cannot be undone.
+                </p>
+              </div>
+              <div className="items-center px-4 py-3">
+                <button
+                  onClick={() => handleRemoveFromStore(removeConfirm.product!.id)}
+                  disabled={removingFromStore === removeConfirm.product.id}
+                  className="px-4 py-2 bg-red-600 text-white text-base font-medium rounded-md w-24 mr-2 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-300 disabled:opacity-50"
+                >
+                  {removingFromStore === removeConfirm.product.id ? 'Removing...' : 'Remove'}
+                </button>
+                <button
+                  onClick={cancelRemove}
+                  disabled={removingFromStore === removeConfirm.product.id}
+                  className="px-4 py-2 bg-gray-300 text-gray-800 text-base font-medium rounded-md w-24 hover:bg-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-300 disabled:opacity-50"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

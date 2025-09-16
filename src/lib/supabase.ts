@@ -46,6 +46,21 @@ export interface AddedProduct {
   product_id: string
   shopify_product_id: string
   added_at: string
+  sync_status: 'active' | 'deleted' | 'error'
+  last_synced_at: string
+  deleted_at?: string
+}
+
+export interface WebhookEvent {
+  id: string
+  shop_domain: string
+  event_type: string
+  shopify_product_id?: string
+  product_id?: string
+  added_product_id?: string
+  payload: Record<string, unknown>
+  processed: boolean
+  created_at: string
 }
 
 // Database functions
@@ -239,6 +254,28 @@ export async function getAllProducts(): Promise<Product[]> {
   return data || []
 }
 
+export async function deleteProduct(productId: string): Promise<void> {
+  // First, delete all product variants
+  const { error: variantsError } = await supabase
+    .from('product_variants')
+    .delete()
+    .eq('product_id', productId)
+
+  if (variantsError) {
+    throw new Error(`Failed to delete product variants: ${variantsError.message}`)
+  }
+
+  // Then delete the product
+  const { error: productError } = await supabase
+    .from('products')
+    .delete()
+    .eq('id', productId)
+
+  if (productError) {
+    throw new Error(`Failed to delete product: ${productError.message}`)
+  }
+}
+
 // Added products tracking functions
 export async function addProductToUser(userId: string, productId: string, shopifyProductId: string): Promise<AddedProduct> {
   const { data, error } = await supabase
@@ -288,4 +325,106 @@ export async function isProductAddedByUser(userId: string, productId: string): P
   }
 
   return !!data
+}
+
+export async function removeProductFromUser(userId: string, productId: string): Promise<void> {
+  const { error } = await supabase
+    .from('added_products')
+    .delete()
+    .eq('user_id', userId)
+    .eq('product_id', productId)
+
+  if (error) {
+    throw new Error(`Failed to remove product from user: ${error.message}`)
+  }
+}
+
+// Sync management functions
+export async function getDeletedProductsByUser(userId: string): Promise<AddedProduct[]> {
+  const { data, error } = await supabase
+    .from('added_products')
+    .select(`
+      *,
+      products (
+        id,
+        title,
+        description,
+        price,
+        image_url,
+        set
+      )
+    `)
+    .eq('user_id', userId)
+    .eq('sync_status', 'deleted')
+    .order('deleted_at', { ascending: false })
+
+  if (error) {
+    throw new Error(`Failed to get deleted products: ${error.message}`)
+  }
+
+  return data || []
+}
+
+export async function reAddProductToUser(userId: string, productId: string, shopifyProductId: string): Promise<AddedProduct> {
+  const { data, error } = await supabase
+    .from('added_products')
+    .update({
+      sync_status: 'active',
+      shopify_product_id: shopifyProductId,
+      deleted_at: null,
+      last_synced_at: new Date().toISOString()
+    })
+    .eq('user_id', userId)
+    .eq('product_id', productId)
+    .eq('sync_status', 'deleted')
+    .select()
+    .single()
+
+  if (error) {
+    throw new Error(`Failed to re-add product: ${error.message}`)
+  }
+
+  return data
+}
+
+export async function getSyncStatusByUser(userId: string): Promise<{
+  active: number
+  deleted: number
+  error: number
+  lastSync: string | null
+}> {
+  const { data, error } = await supabase
+    .from('added_products')
+    .select('sync_status, last_synced_at')
+    .eq('user_id', userId)
+
+  if (error) {
+    throw new Error(`Failed to get sync status: ${error.message}`)
+  }
+
+  const status = {
+    active: 0,
+    deleted: 0,
+    error: 0,
+    lastSync: null as string | null
+  }
+
+  let latestSync: Date | null = null
+
+  data?.forEach(item => {
+    status[item.sync_status as keyof typeof status]++
+
+    const syncDate = new Date(item.last_synced_at)
+    if (!latestSync || syncDate > latestSync) {
+      latestSync = syncDate
+    }
+  })
+
+  if (latestSync !== null) {
+    status.lastSync = (latestSync as Date).toISOString()
+  } else {
+    status.lastSync = null
+  }
+
+  return status
 }

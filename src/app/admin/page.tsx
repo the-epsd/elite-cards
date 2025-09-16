@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Image from 'next/image'
-import { Package, Users, Edit } from 'lucide-react'
+import { Package, Users, Edit, Trash2 } from 'lucide-react'
 import Sidebar from '@/components/Sidebar'
 import SkeletonLoader from '@/components/SkeletonLoader'
 import PageTransition from '@/components/PageTransition'
@@ -28,6 +28,11 @@ export default function AdminPage() {
   const [products, setProducts] = useState<Product[]>([])
   const [users, setUsers] = useState<User[]>([])
   const [loading, setLoading] = useState(true)
+  const [deleteConfirm, setDeleteConfirm] = useState<{ show: boolean; product: Product | null }>({
+    show: false,
+    product: null
+  })
+  const [deleting, setDeleting] = useState(false)
   const router = useRouter()
 
   useEffect(() => {
@@ -57,6 +62,38 @@ export default function AdminPage() {
     } finally {
       setLoading(false)
     }
+  }
+
+  const handleDeleteProduct = async (productId: string) => {
+    setDeleting(true)
+    try {
+      const response = await fetch(`/api/products/delete/${productId}`, {
+        method: 'DELETE',
+      })
+
+      if (response.ok) {
+        // Remove the product from the local state
+        setProducts(products.filter(product => product.id !== productId))
+        setDeleteConfirm({ show: false, product: null })
+        alert('Product deleted successfully!')
+      } else {
+        const error = await response.json()
+        alert(`Error: ${error.error}`)
+      }
+    } catch (error) {
+      console.error('Error deleting product:', error)
+      alert('Failed to delete product')
+    } finally {
+      setDeleting(false)
+    }
+  }
+
+  const confirmDelete = (product: Product) => {
+    setDeleteConfirm({ show: true, product })
+  }
+
+  const cancelDelete = () => {
+    setDeleteConfirm({ show: false, product: null })
   }
 
 
@@ -186,8 +223,16 @@ export default function AdminPage() {
                           <button
                             onClick={() => router.push(`/admin/edit-product/${product.id}`)}
                             className="text-indigo-600 hover:text-indigo-900"
+                            title="Edit product"
                           >
                             <Edit className="h-4 w-4" />
+                          </button>
+                          <button
+                            onClick={() => confirmDelete(product)}
+                            className="text-red-600 hover:text-red-900"
+                            title="Delete product"
+                          >
+                            <Trash2 className="h-4 w-4" />
                           </button>
                           <span className="text-xs text-gray-400">
                             {new Date(product.created_at).toLocaleDateString()}
@@ -202,6 +247,41 @@ export default function AdminPage() {
           </PageTransition>
         </main>
       </div>
+
+      {/* Delete Confirmation Dialog */}
+      {deleteConfirm.show && deleteConfirm.product && (
+        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+          <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+            <div className="mt-3 text-center">
+              <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100">
+                <Trash2 className="h-6 w-6 text-red-600" />
+              </div>
+              <h3 className="text-lg font-medium text-gray-900 mt-4">Delete Product</h3>
+              <div className="mt-2 px-7 py-3">
+                <p className="text-sm text-gray-500">
+                  Are you sure you want to delete &quot;{deleteConfirm.product.title}&quot;? This action cannot be undone.
+                </p>
+              </div>
+              <div className="items-center px-4 py-3">
+                <button
+                  onClick={() => handleDeleteProduct(deleteConfirm.product!.id)}
+                  disabled={deleting}
+                  className="px-4 py-2 bg-red-600 text-white text-base font-medium rounded-md w-24 mr-2 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-300 disabled:opacity-50"
+                >
+                  {deleting ? 'Deleting...' : 'Delete'}
+                </button>
+                <button
+                  onClick={cancelDelete}
+                  disabled={deleting}
+                  className="px-4 py-2 bg-gray-300 text-gray-800 text-base font-medium rounded-md w-24 hover:bg-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-300 disabled:opacity-50"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

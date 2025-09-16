@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Image from 'next/image'
-import { ShoppingCart, LogOut, Package } from 'lucide-react'
+import { ShoppingCart, LogOut, Package, Settings, Users, Plus } from 'lucide-react'
 
 interface Product {
   id: string
@@ -15,15 +15,35 @@ interface Product {
   createdAt: string
 }
 
+interface UserSession {
+  userId: string
+  shopDomain: string
+  role: 'admin' | 'end_user'
+}
+
 export default function CatalogPage() {
   const [products, setProducts] = useState<Record<string, Product[]>>({})
   const [loading, setLoading] = useState(true)
   const [addingToStore, setAddingToStore] = useState<string | null>(null)
+  const [session, setSession] = useState<UserSession | null>(null)
   const router = useRouter()
 
   useEffect(() => {
     fetchProducts()
+    fetchSession()
   }, [])
+
+  const fetchSession = async () => {
+    try {
+      const response = await fetch('/api/auth/session')
+      if (response.ok) {
+        const sessionData = await response.json()
+        setSession(sessionData.session)
+      }
+    } catch (error) {
+      console.error('Error fetching session:', error)
+    }
+  }
 
   const fetchProducts = async () => {
     try {
@@ -91,13 +111,44 @@ export default function CatalogPage() {
               <Package className="h-8 w-8 text-indigo-600" />
               <h1 className="ml-2 text-2xl font-bold text-gray-900">Elite Cards Catalog</h1>
             </div>
-            <button
-              onClick={handleLogout}
-              className="flex items-center text-gray-500 hover:text-gray-700"
-            >
-              <LogOut className="h-5 w-5 mr-2" />
-              Logout
-            </button>
+
+            <div className="flex items-center space-x-4">
+              {/* Admin Navigation */}
+              {session?.role === 'admin' && (
+                <div className="flex items-center space-x-2">
+                  <span className="text-sm text-gray-500">Admin:</span>
+                  <button
+                    onClick={() => router.push('/admin')}
+                    className="flex items-center px-3 py-2 text-sm text-gray-700 hover:text-indigo-600 hover:bg-gray-100 rounded-md transition-colors"
+                  >
+                    <Settings className="h-4 w-4 mr-1" />
+                    Dashboard
+                  </button>
+                  <button
+                    onClick={() => router.push('/admin/create-product')}
+                    className="flex items-center px-3 py-2 text-sm text-gray-700 hover:text-indigo-600 hover:bg-gray-100 rounded-md transition-colors"
+                  >
+                    <Plus className="h-4 w-4 mr-1" />
+                    Create Product
+                  </button>
+                  <button
+                    onClick={() => router.push('/admin/users')}
+                    className="flex items-center px-3 py-2 text-sm text-gray-700 hover:text-indigo-600 hover:bg-gray-100 rounded-md transition-colors"
+                  >
+                    <Users className="h-4 w-4 mr-1" />
+                    Manage Users
+                  </button>
+                </div>
+              )}
+
+              <button
+                onClick={handleLogout}
+                className="flex items-center text-gray-500 hover:text-gray-700"
+              >
+                <LogOut className="h-5 w-5 mr-2" />
+                Logout
+              </button>
+            </div>
           </div>
         </div>
       </header>

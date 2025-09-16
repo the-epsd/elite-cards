@@ -175,6 +175,51 @@ export async function createProductInShopify(
   }
 }
 
+export async function deleteProductFromShopify(
+  accessToken: string,
+  shopDomain: string,
+  productId: string
+): Promise<{ success: boolean; error?: string }> {
+  try {
+    console.log('Deleting product from Shopify:', {
+      shopDomain,
+      productId
+    })
+
+    const response = await fetch(`https://${shopDomain}/admin/api/2024-01/products/${productId}.json`, {
+      method: 'DELETE',
+      headers: {
+        'X-Shopify-Access-Token': accessToken,
+        'Content-Type': 'application/json',
+      },
+    })
+
+    if (!response.ok) {
+      const errorText = await response.text()
+      console.error('Shopify API error:', {
+        status: response.status,
+        statusText: response.statusText,
+        error: errorText
+      })
+      return {
+        success: false,
+        error: `Shopify API error: ${response.status} ${errorText}`,
+      }
+    }
+
+    console.log('Product deleted successfully from Shopify:', productId)
+    return {
+      success: true,
+    }
+  } catch (error) {
+    console.error('Error deleting product from Shopify:', error)
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error',
+    }
+  }
+}
+
 export function getShopifyAuthUrl(shop: string, redirectUri: string): string {
   const authUrl = new URL(`https://${shop}/admin/oauth/authorize`)
   authUrl.searchParams.set('client_id', process.env.SHOPIFY_API_KEY!)

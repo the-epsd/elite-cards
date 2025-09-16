@@ -327,6 +327,24 @@ export async function isProductAddedByUser(userId: string, productId: string): P
   return !!data
 }
 
+export async function getAddedProductByUserAndProduct(userId: string, productId: string): Promise<AddedProduct | null> {
+  const { data, error } = await supabase
+    .from('added_products')
+    .select('*')
+    .eq('user_id', userId)
+    .eq('product_id', productId)
+    .single()
+
+  if (error) {
+    if (error.code === 'PGRST116') {
+      return null // Product not added
+    }
+    throw new Error(`Failed to get added product: ${error.message}`)
+  }
+
+  return data
+}
+
 export async function removeProductFromUser(userId: string, productId: string): Promise<void> {
   const { error } = await supabase
     .from('added_products')

@@ -65,14 +65,18 @@ export async function GET(request: NextRequest) {
     const user = await createOrUpdateUser(shopDomain, accessToken, role)
 
     // Create JWT session
-    const sessionToken = createSession({
+    const sessionData = {
       userId: user.id,
       shopDomain: user.shop_domain,
       role: user.role as 'admin' | 'end_user',
-    })
+    }
+    
+    console.log('Creating session with data:', sessionData)
+    const sessionToken = createSession(sessionData)
 
-    console.log('Session created:', { userId: user.id, shopDomain: user.shop_domain, role: user.role })
-    console.log('Session token:', sessionToken.substring(0, 50) + '...')
+    console.log('Session created successfully')
+    console.log('Session token length:', sessionToken.length)
+    console.log('Session token preview:', sessionToken.substring(0, 50) + '...')
 
     // Redirect based on user role
     const redirectUrl = user.role === 'admin' ? '/admin' : '/catalog'
@@ -92,6 +96,8 @@ export async function GET(request: NextRequest) {
     })
 
     console.log('Cookie set directly on response')
+    console.log('Cookie value length:', sessionToken.length)
+    console.log('Response headers:', Object.fromEntries(response.headers.entries()))
     console.log('=== OAUTH CALLBACK END - REDIRECTING TO:', `${appUrl}${redirectUrl}`)
 
     return response

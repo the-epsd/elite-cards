@@ -13,7 +13,10 @@ const JWT_SECRET = process.env.JWT_SECRET || 'fallback-secret-key'
 
 export function createSession(user: UserSession): string {
   console.log('Creating session with JWT_SECRET:', JWT_SECRET ? 'SET' : 'NOT SET')
-  return jwt.sign(user, JWT_SECRET, { expiresIn: '7d' })
+  console.log('User session data:', user)
+  const token = jwt.sign(user, JWT_SECRET, { expiresIn: '7d' })
+  console.log('Generated token length:', token.length)
+  return token
 }
 
 export function verifySession(token: string): UserSession | null {

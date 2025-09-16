@@ -6,7 +6,7 @@ export const shopify = shopifyApi({
   apiKey: process.env.SHOPIFY_API_KEY!,
   apiSecretKey: process.env.SHOPIFY_API_SECRET!,
   scopes: process.env.SHOPIFY_SCOPES?.split(',') || ['read_products', 'write_products'],
-  hostName: process.env.APP_URL!.replace(/https?:\/\//, ''),
+  hostName: process.env.APP_URL?.replace(/https?:\/\//, '') || 'localhost:3000',
   apiVersion: LATEST_API_VERSION,
   isEmbeddedApp: true,
 })
@@ -109,7 +109,7 @@ export async function validateShopifyCallback(
 
     // For now, we'll skip HMAC validation for simplicity
     // In production, you should validate the HMAC signature
-    
+
     // Exchange code for access token
     const tokenResponse = await fetch(`https://${shop}/admin/oauth/access_token`, {
       method: 'POST',

@@ -43,6 +43,13 @@ export default function Sidebar({ currentPage = '' }: SidebarProps) {
     return currentPage === page ? 'text-indigo-600 bg-indigo-50' : 'text-gray-700 hover:text-indigo-600 hover:bg-gray-100'
   }
 
+  const handleNavigation = (path: string) => {
+    // Add a small delay to make navigation feel smoother
+    setTimeout(() => {
+      router.push(path)
+    }, 100)
+  }
+
   return (
     <div className="w-64 bg-white shadow-lg flex flex-col">
       {/* Logo Section */}
@@ -63,21 +70,21 @@ export default function Sidebar({ currentPage = '' }: SidebarProps) {
                 Admin
               </div>
               <button
-                onClick={() => router.push('/admin')}
+                onClick={() => handleNavigation('/admin')}
                 className={`w-full flex items-center px-3 py-2 text-sm rounded-md transition-colors ${isActive('admin')}`}
               >
                 <BarChart3 className="h-4 w-4 mr-3" />
                 Dashboard
               </button>
               <button
-                onClick={() => router.push('/admin/create-product')}
+                onClick={() => handleNavigation('/admin/create-product')}
                 className={`w-full flex items-center px-3 py-2 text-sm rounded-md transition-colors ${isActive('create-product')}`}
               >
                 <Plus className="h-4 w-4 mr-3" />
                 Create Product
               </button>
               <button
-                onClick={() => router.push('/admin/users')}
+                onClick={() => handleNavigation('/admin/users')}
                 className={`w-full flex items-center px-3 py-2 text-sm rounded-md transition-colors ${isActive('users')}`}
               >
                 <Users className="h-4 w-4 mr-3" />
@@ -91,7 +98,7 @@ export default function Sidebar({ currentPage = '' }: SidebarProps) {
             {session?.role === 'admin' ? 'General' : 'Navigation'}
           </div>
           <button
-            onClick={() => router.push('/catalog')}
+            onClick={() => handleNavigation('/catalog')}
             className={`w-full flex items-center px-3 py-2 text-sm rounded-md transition-colors ${isActive('catalog')}`}
           >
             <Package className="h-4 w-4 mr-3" />

@@ -3,6 +3,8 @@
 import { useState, useEffect } from 'react'
 import { ShoppingCart, Package } from 'lucide-react'
 import Sidebar from '@/components/Sidebar'
+import SkeletonLoader from '@/components/SkeletonLoader'
+import PageTransition from '@/components/PageTransition'
 
 interface Product {
   id: string
@@ -85,10 +87,16 @@ export default function CatalogPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-indigo-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading catalog...</p>
+      <div className="min-h-screen bg-gray-50 flex">
+        <Sidebar currentPage="catalog" />
+        <div className="flex-1 flex flex-col">
+          <main className="flex-1 py-6 px-6">
+            <div className="mb-6">
+              <div className="h-8 bg-gray-200 rounded animate-pulse w-1/3 mb-2"></div>
+              <div className="h-4 bg-gray-200 rounded animate-pulse w-1/2"></div>
+            </div>
+            <SkeletonLoader type="card" count={2} />
+          </main>
         </div>
       </div>
     )
@@ -102,78 +110,80 @@ export default function CatalogPage() {
       {/* Main Content */}
       <div className="flex-1 flex flex-col">
         <main className="flex-1 py-6 px-6">
-          <div className="mb-6">
-            <h2 className="text-xl font-semibold text-gray-900">Premium Trading Cards</h2>
-            <p className="text-gray-600">Add these exclusive cards to your Shopify store with one click</p>
-          </div>
+          <PageTransition>
+            <div className="mb-6">
+              <h2 className="text-xl font-semibold text-gray-900">Premium Trading Cards</h2>
+              <p className="text-gray-600">Add these exclusive cards to your Shopify store with one click</p>
+            </div>
 
-          <div className="space-y-8">
-            {Object.keys(products).length === 0 ? (
-              <div className="text-center py-12">
-                <Package className="mx-auto h-12 w-12 text-gray-400" />
-                <h3 className="mt-2 text-sm font-medium text-gray-900">No products available</h3>
-                <p className="mt-1 text-sm text-gray-500">Check back later for new card sets.</p>
-              </div>
-            ) : (
-              Object.entries(products).map(([set, setProducts]) => (
-                <div key={set} className="bg-white rounded-lg shadow">
-                  <div className="px-6 py-4 border-b border-gray-200">
-                    <h3 className="text-lg font-medium text-gray-900">{set}</h3>
-                    <p className="text-sm text-gray-500">{setProducts.length} cards available</p>
-                  </div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 p-6">
-                    {setProducts.map((product) => (
-                      <div key={product.id} className="border rounded-lg overflow-hidden hover:shadow-lg transition-shadow">
-                        {product.image_url ? (
-                          <img
-                            src={product.image_url}
-                            alt={product.title}
-                            className="w-full h-48 object-cover"
-                            onError={(e) => {
-                              console.error('Image failed to load:', product.image_url)
-                              e.currentTarget.src = '/placeholder-card.svg'
-                            }}
-                            onLoad={() => {
-                              console.log('Image loaded successfully:', product.image_url)
-                            }}
-                          />
-                        ) : (
-                          <div className="w-full h-48 bg-gray-200 flex items-center justify-center">
-                            <Package className="h-12 w-12 text-gray-400" />
-                          </div>
-                        )}
-                        <div className="p-4">
-                          <h4 className="font-medium text-gray-900 mb-2">{product.title}</h4>
-                          <p className="text-sm text-gray-500 mb-3 line-clamp-2">{product.description}</p>
-                          <div className="flex items-center justify-between">
-                            <span className="text-lg font-semibold text-indigo-600">${product.price}</span>
-                            {addedProductIds.has(product.id) ? (
-                              <button
-                                disabled
-                                className="flex items-center px-3 py-2 bg-gray-400 text-white text-sm rounded-md cursor-not-allowed"
-                              >
-                                <ShoppingCart className="h-4 w-4 mr-1" />
-                                Added
-                              </button>
-                            ) : (
-                              <button
-                                onClick={() => handleAddToStore(product.id)}
-                                disabled={addingToStore === product.id}
-                                className="flex items-center px-3 py-2 bg-indigo-600 text-white text-sm rounded-md hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed"
-                              >
-                                <ShoppingCart className="h-4 w-4 mr-1" />
-                                {addingToStore === product.id ? 'Adding...' : 'Add to Store'}
-                              </button>
-                            )}
+            <div className="space-y-8">
+              {Object.keys(products).length === 0 ? (
+                <div className="text-center py-12">
+                  <Package className="mx-auto h-12 w-12 text-gray-400" />
+                  <h3 className="mt-2 text-sm font-medium text-gray-900">No products available</h3>
+                  <p className="mt-1 text-sm text-gray-500">Check back later for new card sets.</p>
+                </div>
+              ) : (
+                Object.entries(products).map(([set, setProducts]) => (
+                  <div key={set} className="bg-white rounded-lg shadow">
+                    <div className="px-6 py-4 border-b border-gray-200">
+                      <h3 className="text-lg font-medium text-gray-900">{set}</h3>
+                      <p className="text-sm text-gray-500">{setProducts.length} cards available</p>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 p-6">
+                      {setProducts.map((product) => (
+                        <div key={product.id} className="border rounded-lg overflow-hidden hover:shadow-lg transition-shadow">
+                          {product.image_url ? (
+                            <img
+                              src={product.image_url}
+                              alt={product.title}
+                              className="w-full h-48 object-cover"
+                              onError={(e) => {
+                                console.error('Image failed to load:', product.image_url)
+                                e.currentTarget.src = '/placeholder-card.svg'
+                              }}
+                              onLoad={() => {
+                                console.log('Image loaded successfully:', product.image_url)
+                              }}
+                            />
+                          ) : (
+                            <div className="w-full h-48 bg-gray-200 flex items-center justify-center">
+                              <Package className="h-12 w-12 text-gray-400" />
+                            </div>
+                          )}
+                          <div className="p-4">
+                            <h4 className="font-medium text-gray-900 mb-2">{product.title}</h4>
+                            <p className="text-sm text-gray-500 mb-3 line-clamp-2">{product.description}</p>
+                            <div className="flex items-center justify-between">
+                              <span className="text-lg font-semibold text-indigo-600">${product.price}</span>
+                              {addedProductIds.has(product.id) ? (
+                                <button
+                                  disabled
+                                  className="flex items-center px-3 py-2 bg-gray-400 text-white text-sm rounded-md cursor-not-allowed"
+                                >
+                                  <ShoppingCart className="h-4 w-4 mr-1" />
+                                  Added
+                                </button>
+                              ) : (
+                                <button
+                                  onClick={() => handleAddToStore(product.id)}
+                                  disabled={addingToStore === product.id}
+                                  className="flex items-center px-3 py-2 bg-indigo-600 text-white text-sm rounded-md hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                                >
+                                  <ShoppingCart className="h-4 w-4 mr-1" />
+                                  {addingToStore === product.id ? 'Adding...' : 'Add to Store'}
+                                </button>
+                              )}
+                            </div>
                           </div>
                         </div>
-                      </div>
-                    ))}
+                      ))}
+                    </div>
                   </div>
-                </div>
-              ))
-            )}
-          </div>
+                ))
+              )}
+            </div>
+          </PageTransition>
         </main>
       </div>
     </div>

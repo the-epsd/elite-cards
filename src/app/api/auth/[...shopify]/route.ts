@@ -64,14 +64,20 @@ export async function GET(request: NextRequest) {
       role: user.role as 'admin' | 'end_user',
     })
 
+    console.log('Session created:', { userId: user.id, shopDomain: user.shop_domain, role: user.role })
+    console.log('Session token:', sessionToken.substring(0, 50) + '...')
+
     // Redirect based on user role
     const redirectUrl = user.role === 'admin' ? '/admin' : '/catalog'
+    console.log('Redirecting to:', redirectUrl)
 
     // Create response with session cookie
     const appUrl = process.env.APP_URL || 'https://elite-cards.vercel.app'
     const response = NextResponse.redirect(`${appUrl}${redirectUrl}`)
     const cookieHeader = setSessionCookie(sessionToken)['Set-Cookie']
     response.headers.set('Set-Cookie', cookieHeader)
+
+    console.log('Cookie header set:', cookieHeader.substring(0, 100) + '...')
 
     return response
   } catch (error) {

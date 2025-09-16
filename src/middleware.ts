@@ -17,9 +17,12 @@ export function middleware(request: NextRequest) {
 
   // Check for session cookie
   const sessionToken = request.cookies.get('session')?.value
+  console.log('Middleware - pathname:', pathname)
+  console.log('Middleware - session token exists:', !!sessionToken)
 
   if (!sessionToken) {
     // No session, redirect to auth
+    console.log('Middleware - No session token, redirecting to auth')
     const shop = request.nextUrl.searchParams.get('shop')
     const authUrl = shop ? `/auth?shop=${shop}` : '/auth'
     return NextResponse.redirect(new URL(authUrl, request.url))
@@ -27,8 +30,14 @@ export function middleware(request: NextRequest) {
 
   // Verify session
   const session = verifySession(sessionToken)
+  console.log('Middleware - Session verification result:', !!session)
+  if (session) {
+    console.log('Middleware - Session details:', { userId: session.userId, shopDomain: session.shopDomain, role: session.role })
+  }
+  
   if (!session) {
     // Invalid session, redirect to auth
+    console.log('Middleware - Invalid session, redirecting to auth')
     const shop = request.nextUrl.searchParams.get('shop')
     const authUrl = shop ? `/auth?shop=${shop}` : '/auth'
     const response = NextResponse.redirect(new URL(authUrl, request.url))

@@ -9,16 +9,19 @@ export interface UserSession {
   role: 'admin' | 'end_user'
 }
 
-const JWT_SECRET = process.env.JWT_SECRET!
+const JWT_SECRET = process.env.JWT_SECRET || 'fallback-secret-key'
 
 export function createSession(user: UserSession): string {
+  console.log('Creating session with JWT_SECRET:', JWT_SECRET ? 'SET' : 'NOT SET')
   return jwt.sign(user, JWT_SECRET, { expiresIn: '7d' })
 }
 
 export function verifySession(token: string): UserSession | null {
   try {
+    console.log('Verifying session with JWT_SECRET:', JWT_SECRET ? 'SET' : 'NOT SET')
     return jwt.verify(token, JWT_SECRET) as UserSession
-  } catch {
+  } catch (error) {
+    console.log('Session verification failed:', error)
     return null
   }
 }

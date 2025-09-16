@@ -75,27 +75,69 @@ export default function AdminPage() {
   const endUsers = users.filter(user => user.role === 'end_user').length
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <header className="bg-white shadow">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center py-6">
-            <div className="flex items-center">
-              <BarChart3 className="h-8 w-8 text-indigo-600" />
-              <h1 className="ml-2 text-2xl font-bold text-gray-900">Admin Dashboard</h1>
-            </div>
-            <button
-              onClick={handleLogout}
-              className="flex items-center text-gray-500 hover:text-gray-700"
-            >
-              <LogOut className="h-5 w-5 mr-2" />
-              Logout
-            </button>
+    <div className="min-h-screen bg-gray-50 flex">
+      {/* Sidebar */}
+      <div className="w-64 bg-white shadow-lg flex flex-col">
+        {/* Logo Section */}
+        <div className="p-6 border-b border-gray-200">
+          <div className="flex items-center justify-center">
+            <BarChart3 className="h-10 w-10 text-indigo-600" />
+            <h1 className="ml-3 text-xl font-bold text-gray-900">Elite Cards</h1>
           </div>
         </div>
-      </header>
 
-      <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
-        <div className="px-4 py-6 sm:px-0">
+        {/* Navigation */}
+        <div className="flex-1 p-4">
+          <nav className="space-y-2">
+            <div className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">
+              Admin
+            </div>
+            <button
+              onClick={() => router.push('/admin')}
+              className="w-full flex items-center px-3 py-2 text-sm text-indigo-600 bg-indigo-50 rounded-md"
+            >
+              <BarChart3 className="h-4 w-4 mr-3" />
+              Dashboard
+            </button>
+            <button
+              onClick={() => router.push('/admin/create-product')}
+              className="w-full flex items-center px-3 py-2 text-sm text-gray-700 hover:text-indigo-600 hover:bg-gray-100 rounded-md transition-colors"
+            >
+              <Plus className="h-4 w-4 mr-3" />
+              Create Product
+            </button>
+            <button
+              onClick={() => router.push('/admin/users')}
+              className="w-full flex items-center px-3 py-2 text-sm text-gray-700 hover:text-indigo-600 hover:bg-gray-100 rounded-md transition-colors"
+            >
+              <Users className="h-4 w-4 mr-3" />
+              Manage Users
+            </button>
+            <button
+              onClick={() => router.push('/catalog')}
+              className="w-full flex items-center px-3 py-2 text-sm text-gray-700 hover:text-indigo-600 hover:bg-gray-100 rounded-md transition-colors"
+            >
+              <Package className="h-4 w-4 mr-3" />
+              View Catalog
+            </button>
+          </nav>
+        </div>
+
+        {/* Logout Button */}
+        <div className="p-4 border-t border-gray-200">
+          <button
+            onClick={handleLogout}
+            className="w-full flex items-center px-3 py-2 text-sm text-gray-700 hover:text-red-600 hover:bg-red-50 rounded-md transition-colors"
+          >
+            <LogOut className="h-4 w-4 mr-3" />
+            Logout
+          </button>
+        </div>
+      </div>
+
+      {/* Main Content */}
+      <div className="flex-1 flex flex-col">
+        <main className="flex-1 py-6 px-6">
           {/* Stats Cards */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
             <div className="bg-white overflow-hidden shadow rounded-lg">
@@ -163,59 +205,6 @@ export default function AdminPage() {
             </div>
           </div>
 
-          {/* Action Buttons */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-            <button
-              onClick={() => router.push('/admin/create-product')}
-              className="bg-white overflow-hidden shadow rounded-lg hover:shadow-lg transition-shadow"
-            >
-              <div className="p-6">
-                <div className="flex items-center">
-                  <div className="flex-shrink-0">
-                    <Plus className="h-8 w-8 text-indigo-600" />
-                  </div>
-                  <div className="ml-4">
-                    <h3 className="text-lg font-medium text-gray-900">Create Product</h3>
-                    <p className="text-sm text-gray-500">Add a new trading card to the catalog</p>
-                  </div>
-                </div>
-              </div>
-            </button>
-
-            <button
-              onClick={() => router.push('/admin/users')}
-              className="bg-white overflow-hidden shadow rounded-lg hover:shadow-lg transition-shadow"
-            >
-              <div className="p-6">
-                <div className="flex items-center">
-                  <div className="flex-shrink-0">
-                    <Users className="h-8 w-8 text-indigo-600" />
-                  </div>
-                  <div className="ml-4">
-                    <h3 className="text-lg font-medium text-gray-900">Manage Users</h3>
-                    <p className="text-sm text-gray-500">Promote users to admin or demote them</p>
-                  </div>
-                </div>
-              </div>
-            </button>
-
-            <button
-              onClick={() => router.push('/catalog')}
-              className="bg-white overflow-hidden shadow rounded-lg hover:shadow-lg transition-shadow"
-            >
-              <div className="p-6">
-                <div className="flex items-center">
-                  <div className="flex-shrink-0">
-                    <Package className="h-8 w-8 text-indigo-600" />
-                  </div>
-                  <div className="ml-4">
-                    <h3 className="text-lg font-medium text-gray-900">View Catalog</h3>
-                    <p className="text-sm text-gray-500">See how products appear to users</p>
-                  </div>
-                </div>
-              </div>
-            </button>
-          </div>
 
           {/* Recent Products */}
           <div className="bg-white shadow rounded-lg">
@@ -260,8 +249,8 @@ export default function AdminPage() {
               )}
             </div>
           </div>
-        </div>
-      </main>
+        </main>
+      </div>
     </div>
   )
 }

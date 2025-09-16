@@ -120,58 +120,71 @@ export default function CatalogPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <header className="bg-white shadow">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center py-6">
-            <div className="flex items-center">
-              <Package className="h-8 w-8 text-indigo-600" />
-              <h1 className="ml-2 text-2xl font-bold text-gray-900">Elite Cards Catalog</h1>
-            </div>
-
-            <div className="flex items-center space-x-4">
-              {/* Admin Navigation */}
-              {session?.role === 'admin' && (
-                <div className="flex items-center space-x-2">
-                  <span className="text-sm text-gray-500">Admin:</span>
-                  <button
-                    onClick={() => router.push('/admin')}
-                    className="flex items-center px-3 py-2 text-sm text-gray-700 hover:text-indigo-600 hover:bg-gray-100 rounded-md transition-colors"
-                  >
-                    <Settings className="h-4 w-4 mr-1" />
-                    Dashboard
-                  </button>
-                  <button
-                    onClick={() => router.push('/admin/create-product')}
-                    className="flex items-center px-3 py-2 text-sm text-gray-700 hover:text-indigo-600 hover:bg-gray-100 rounded-md transition-colors"
-                  >
-                    <Plus className="h-4 w-4 mr-1" />
-                    Create Product
-                  </button>
-                  <button
-                    onClick={() => router.push('/admin/users')}
-                    className="flex items-center px-3 py-2 text-sm text-gray-700 hover:text-indigo-600 hover:bg-gray-100 rounded-md transition-colors"
-                  >
-                    <Users className="h-4 w-4 mr-1" />
-                    Manage Users
-                  </button>
-                </div>
-              )}
-
-              <button
-                onClick={handleLogout}
-                className="flex items-center text-gray-500 hover:text-gray-700"
-              >
-                <LogOut className="h-5 w-5 mr-2" />
-                Logout
-              </button>
-            </div>
+    <div className="min-h-screen bg-gray-50 flex">
+      {/* Sidebar */}
+      <div className="w-64 bg-white shadow-lg flex flex-col">
+        {/* Logo Section */}
+        <div className="p-6 border-b border-gray-200">
+          <div className="flex items-center justify-center">
+            <Package className="h-10 w-10 text-indigo-600" />
+            <h1 className="ml-3 text-xl font-bold text-gray-900">Elite Cards</h1>
           </div>
         </div>
-      </header>
 
-      <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
-        <div className="px-4 py-6 sm:px-0">
+        {/* Navigation */}
+        <div className="flex-1 p-4">
+          <nav className="space-y-2">
+            <div className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">
+              Catalog
+            </div>
+
+            {/* Admin Navigation */}
+            {session?.role === 'admin' && (
+              <>
+                <div className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3 mt-6">
+                  Admin
+                </div>
+                <button
+                  onClick={() => router.push('/admin')}
+                  className="w-full flex items-center px-3 py-2 text-sm text-gray-700 hover:text-indigo-600 hover:bg-gray-100 rounded-md transition-colors"
+                >
+                  <Settings className="h-4 w-4 mr-3" />
+                  Dashboard
+                </button>
+                <button
+                  onClick={() => router.push('/admin/create-product')}
+                  className="w-full flex items-center px-3 py-2 text-sm text-gray-700 hover:text-indigo-600 hover:bg-gray-100 rounded-md transition-colors"
+                >
+                  <Plus className="h-4 w-4 mr-3" />
+                  Create Product
+                </button>
+                <button
+                  onClick={() => router.push('/admin/users')}
+                  className="w-full flex items-center px-3 py-2 text-sm text-gray-700 hover:text-indigo-600 hover:bg-gray-100 rounded-md transition-colors"
+                >
+                  <Users className="h-4 w-4 mr-3" />
+                  Manage Users
+                </button>
+              </>
+            )}
+          </nav>
+        </div>
+
+        {/* Logout Button */}
+        <div className="p-4 border-t border-gray-200">
+          <button
+            onClick={handleLogout}
+            className="w-full flex items-center px-3 py-2 text-sm text-gray-700 hover:text-red-600 hover:bg-red-50 rounded-md transition-colors"
+          >
+            <LogOut className="h-4 w-4 mr-3" />
+            Logout
+          </button>
+        </div>
+      </div>
+
+      {/* Main Content */}
+      <div className="flex-1 flex flex-col">
+        <main className="flex-1 py-6 px-6">
           <div className="mb-6">
             <h2 className="text-xl font-semibold text-gray-900">Premium Trading Cards</h2>
             <p className="text-gray-600">Add these exclusive cards to your Shopify store with one click</p>
@@ -244,8 +257,8 @@ export default function CatalogPage() {
               ))
             )}
           </div>
-        </div>
-      </main>
+        </main>
+      </div>
     </div>
   )
 }

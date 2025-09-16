@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getSessionFromRequest } from '@/lib/auth'
-import { createProduct } from '@/lib/supabase'
+import { createProduct, createProductVariants } from '@/lib/supabase'
 
 export async function POST(request: NextRequest) {
   try {
@@ -15,7 +15,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json()
-    const { title, description, price, imageUrl, set } = body
+    const { title, description, price, imageUrl, set, isSingle } = body
 
     if (!title || !description || !price || !imageUrl || !set) {
       return NextResponse.json(
@@ -31,7 +31,13 @@ export async function POST(request: NextRequest) {
       image_url: imageUrl,
       set,
       created_by: session.userId,
+      is_single: isSingle || false,
     })
+
+    // If it's a single card, create variants
+    if (isSingle) {
+      await createProductVariants(product.id, parseFloat(price))
+    }
 
     return NextResponse.json({ success: true, product })
   } catch (error) {

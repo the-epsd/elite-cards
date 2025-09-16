@@ -11,7 +11,8 @@ export default function CreateProductPage() {
     description: '',
     price: '',
     imageUrl: '',
-    set: ''
+    set: '',
+    isSingle: false
   })
   const [loading, setLoading] = useState(false)
   const router = useRouter()
@@ -45,9 +46,10 @@ export default function CreateProductPage() {
   }
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+    const { name, value, type } = e.target
     setFormData({
       ...formData,
-      [e.target.name]: e.target.value
+      [name]: type === 'checkbox' ? (e.target as HTMLInputElement).checked : value
     })
   }
 
@@ -154,6 +156,25 @@ export default function CreateProductPage() {
                         <option value="Scarlet & Violet">Scarlet & Violet</option>
                       </select>
                     </div>
+                  </div>
+
+                  <div>
+                    <div className="flex items-center">
+                      <input
+                        type="checkbox"
+                        name="isSingle"
+                        id="isSingle"
+                        checked={formData.isSingle}
+                        onChange={handleChange}
+                        className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
+                      />
+                      <label htmlFor="isSingle" className="ml-2 block text-sm font-medium text-gray-700">
+                        Single (creates NM, LP, MP, DMG variants)
+                      </label>
+                    </div>
+                    <p className="mt-1 text-sm text-gray-500">
+                      Check this if this is a single card that should have condition variants
+                    </p>
                   </div>
 
                   <div>

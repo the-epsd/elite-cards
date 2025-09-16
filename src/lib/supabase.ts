@@ -23,6 +23,16 @@ export interface Product {
   image_url: string
   set: string
   created_by: string
+  is_single: boolean
+  created_at: string
+  updated_at: string
+}
+
+export interface ProductVariant {
+  id: string
+  product_id: string
+  condition: string
+  price: number
   created_at: string
   updated_at: string
 }
@@ -95,11 +105,13 @@ export async function createProduct(productData: {
   image_url: string
   set: string
   created_by: string
+  is_single?: boolean
 }): Promise<Product> {
   const { data, error } = await supabase
     .from('products')
     .insert({
       ...productData,
+      is_single: productData.is_single || false,
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString()
     })
@@ -113,12 +125,41 @@ export async function createProduct(productData: {
   return data
 }
 
+export async function createProductVariants(productId: string, basePrice: number): Promise<ProductVariant[]> {
+  const variants = [
+    { condition: 'NM', price: basePrice },
+    { condition: 'LP', price: basePrice * 0.8 },
+    { condition: 'MP', price: basePrice * 0.6 },
+    { condition: 'DMG', price: basePrice * 0.4 }
+  ]
+
+  const { data, error } = await supabase
+    .from('product_variants')
+    .insert(
+      variants.map(variant => ({
+        product_id: productId,
+        condition: variant.condition,
+        price: variant.price,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      }))
+    )
+    .select()
+
+  if (error) {
+    throw new Error(`Failed to create product variants: ${error.message}`)
+  }
+
+  return data || []
+}
+
 export async function updateProduct(productId: string, productData: {
   title?: string
   description?: string
   price?: number
   image_url?: string
   set?: string
+  is_single?: boolean
 }): Promise<Product> {
   const { data, error } = await supabase
     .from('products')

@@ -1,15 +1,40 @@
 import { shopifyApi, LATEST_API_VERSION } from '@shopify/shopify-api'
 import '@shopify/shopify-api/adapters/node'
 
-// Initialize Shopify API
-export const shopify = shopifyApi({
-  apiKey: process.env.SHOPIFY_API_KEY!,
-  apiSecretKey: process.env.SHOPIFY_API_SECRET!,
-  scopes: process.env.SHOPIFY_SCOPES?.split(',') || ['read_products', 'write_products'],
-  hostName: process.env.APP_URL?.replace(/https?:\/\//, '') || 'localhost:3000',
-  apiVersion: LATEST_API_VERSION,
-  isEmbeddedApp: true,
-})
+// Lazy initialization of Shopify API
+let shopifyInstance: ReturnType<typeof shopifyApi> | null = null
+
+function getShopifyInstance() {
+  if (!shopifyInstance) {
+    const apiKey = process.env.SHOPIFY_API_KEY
+    const apiSecretKey = process.env.SHOPIFY_API_SECRET
+
+    if (!apiKey || !apiSecretKey) {
+      throw new Error('Missing Shopify API credentials. Please set SHOPIFY_API_KEY and SHOPIFY_API_SECRET environment variables.')
+    }
+
+    shopifyInstance = shopifyApi({
+      apiKey,
+      apiSecretKey,
+      scopes: process.env.SHOPIFY_SCOPES?.split(',') || ['read_products', 'write_products'],
+      hostName: process.env.APP_URL?.replace(/https?:\/\//, '') || 'localhost:3000',
+      apiVersion: LATEST_API_VERSION,
+      isEmbeddedApp: true,
+    })
+  }
+
+  return shopifyInstance
+}
+
+// Export a getter function instead of the instance
+export const shopify = {
+  get auth() {
+    return getShopifyInstance().auth
+  },
+  get rest() {
+    return getShopifyInstance().rest
+  }
+}
 
 export interface ShopifyProduct {
   title: string

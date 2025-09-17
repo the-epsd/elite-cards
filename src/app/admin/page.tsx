@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Image from 'next/image'
-import { Package, Users, Edit, Trash2 } from 'lucide-react'
+import { Package, Users, Edit, Trash2, Search, ChevronLeft, ChevronRight } from 'lucide-react'
 import Sidebar from '@/components/Sidebar'
 import SkeletonLoader from '@/components/SkeletonLoader'
 import PageTransition from '@/components/PageTransition'
@@ -25,11 +25,29 @@ interface User {
   created_at: string
 }
 
+interface PaginationInfo {
+  currentPage: number
+  totalPages: number
+  totalItems: number
+  itemsPerPage: number
+  hasNextPage: boolean
+  hasPrevPage: boolean
+}
+
 export default function AdminPage() {
   const { showSuccess, showError } = useNotification()
   const [products, setProducts] = useState<Product[]>([])
   const [users, setUsers] = useState<User[]>([])
   const [loading, setLoading] = useState(true)
+  const [searchQuery, setSearchQuery] = useState('')
+  const [pagination, setPagination] = useState<PaginationInfo>({
+    currentPage: 1,
+    totalPages: 1,
+    totalItems: 0,
+    itemsPerPage: 25,
+    hasNextPage: false,
+    hasPrevPage: false
+  })
   const [deleteConfirm, setDeleteConfirm] = useState<{ show: boolean; product: Product | null }>({
     show: false,
     product: null
@@ -41,19 +59,18 @@ export default function AdminPage() {
     fetchData()
   }, [])
 
+  useEffect(() => {
+    if (searchQuery || pagination.currentPage > 1) {
+      fetchProducts()
+    }
+  }, [searchQuery, pagination.currentPage])
+
   const fetchData = async () => {
     try {
       const [productsResponse, usersResponse] = await Promise.all([
-        fetch('/api/products/list'),
+        fetchProducts(),
         fetch('/api/admin/users')
       ])
-
-      if (productsResponse.ok) {
-        const productsData = await productsResponse.json()
-        // Flatten products from grouped structure
-        const allProducts = Object.values(productsData.products).flat() as Product[]
-        setProducts(allProducts)
-      }
 
       if (usersResponse.ok) {
         const usersData = await usersResponse.json()
@@ -64,6 +81,40 @@ export default function AdminPage() {
     } finally {
       setLoading(false)
     }
+  }
+
+  const fetchProducts = async () => {
+    try {
+      const params = new URLSearchParams({
+        page: pagination.currentPage.toString(),
+        limit: '25'
+      })
+
+      if (searchQuery.trim()) {
+        params.append('q', searchQuery.trim())
+      }
+
+      const response = await fetch(`/api/products/search?${params}`)
+
+      if (response.ok) {
+        const data = await response.json()
+        setProducts(data.products)
+        setPagination(data.pagination)
+      } else {
+        console.error('Failed to fetch products')
+      }
+    } catch (error) {
+      console.error('Error fetching products:', error)
+    }
+  }
+
+  const handleSearch = (query: string) => {
+    setSearchQuery(query)
+    setPagination(prev => ({ ...prev, currentPage: 1 }))
+  }
+
+  const handlePageChange = (page: number) => {
+    setPagination(prev => ({ ...prev, currentPage: page }))
   }
 
   const handleDeleteProduct = async (productId: string) => {
@@ -78,6 +129,8 @@ export default function AdminPage() {
         setProducts(products.filter(product => product.id !== productId))
         setDeleteConfirm({ show: false, product: null })
         showSuccess('Product deleted successfully!')
+        // Refresh the product list to update pagination
+        fetchProducts()
       } else {
         const error = await response.json()
         showError(`Error: ${error.error}`)
@@ -193,17 +246,44 @@ export default function AdminPage() {
             </div>
 
 
+            {/* Search Bar */}
+            <div className="bg-white shadow rounded-lg mb-6">
+              <div className="px-6 py-4">
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <Search className="h-5 w-5 text-gray-400" />
+                  </div>
+                  <input
+                    type="text"
+                    placeholder="Search products by title, description, set, or expansion..."
+                    value={searchQuery}
+                    onChange={(e) => handleSearch(e.target.value)}
+                    className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                  />
+                </div>
+              </div>
+            </div>
+
             {/* Recent Products */}
             <div className="bg-white shadow rounded-lg">
-              <div className="px-6 py-4 border-b border-gray-200">
-                <h3 className="text-lg font-medium text-gray-900">Recent Products</h3>
+              <div className="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
+                <h3 className="text-lg font-medium text-gray-900">
+                  {searchQuery ? `Search Results (${pagination.totalItems} found)` : 'Recent Products'}
+                </h3>
+                {pagination.totalItems > 0 && (
+                  <span className="text-sm text-gray-500">
+                    Showing {((pagination.currentPage - 1) * pagination.itemsPerPage) + 1} to {Math.min(pagination.currentPage * pagination.itemsPerPage, pagination.totalItems)} of {pagination.totalItems}
+                  </span>
+                )}
               </div>
               <div className="px-6 py-4">
                 {products.length === 0 ? (
-                  <p className="text-gray-500">No products created yet.</p>
+                  <p className="text-gray-500">
+                    {searchQuery ? 'No products found matching your search.' : 'No products created yet.'}
+                  </p>
                 ) : (
                   <div className="space-y-3">
-                    {products.slice(0, 5).map((product) => (
+                    {products.map((product) => (
                       <div key={product.id} className="flex items-center justify-between py-2 border-b border-gray-100 last:border-b-0">
                         <div className="flex items-center space-x-3">
                           <div className="w-12 h-8 bg-gray-200 rounded flex items-center justify-center overflow-hidden">
@@ -252,6 +332,77 @@ export default function AdminPage() {
                   </div>
                 )}
               </div>
+
+              {/* Pagination Controls */}
+              {pagination.totalPages > 1 && (
+                <div className="px-6 py-4 border-t border-gray-200">
+                  <div className="flex items-center justify-between">
+                    <div className="flex-1 flex justify-between sm:hidden">
+                      <button
+                        onClick={() => handlePageChange(pagination.currentPage - 1)}
+                        disabled={!pagination.hasPrevPage}
+                        className="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        Previous
+                      </button>
+                      <button
+                        onClick={() => handlePageChange(pagination.currentPage + 1)}
+                        disabled={!pagination.hasNextPage}
+                        className="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        Next
+                      </button>
+                    </div>
+                    <div className="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
+                      <div>
+                        <p className="text-sm text-gray-700">
+                          Showing page <span className="font-medium">{pagination.currentPage}</span> of{' '}
+                          <span className="font-medium">{pagination.totalPages}</span>
+                        </p>
+                      </div>
+                      <div>
+                        <nav className="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
+                          <button
+                            onClick={() => handlePageChange(pagination.currentPage - 1)}
+                            disabled={!pagination.hasPrevPage}
+                            className="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                          >
+                            <ChevronLeft className="h-5 w-5" />
+                          </button>
+
+                          {/* Page numbers */}
+                          {Array.from({ length: Math.min(5, pagination.totalPages) }, (_, i) => {
+                            const startPage = Math.max(1, pagination.currentPage - 2)
+                            const pageNum = startPage + i
+                            if (pageNum > pagination.totalPages) return null
+
+                            return (
+                              <button
+                                key={pageNum}
+                                onClick={() => handlePageChange(pageNum)}
+                                className={`relative inline-flex items-center px-4 py-2 border text-sm font-medium ${pageNum === pagination.currentPage
+                                    ? 'z-10 bg-indigo-50 border-indigo-500 text-indigo-600'
+                                    : 'bg-white border-gray-300 text-gray-500 hover:bg-gray-50'
+                                  }`}
+                              >
+                                {pageNum}
+                              </button>
+                            )
+                          })}
+
+                          <button
+                            onClick={() => handlePageChange(pagination.currentPage + 1)}
+                            disabled={!pagination.hasNextPage}
+                            className="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                          >
+                            <ChevronRight className="h-5 w-5" />
+                          </button>
+                        </nav>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           </PageTransition>
         </main>

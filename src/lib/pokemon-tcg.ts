@@ -1,8 +1,9 @@
-// Pokemon TCG API integration for product data and pricing
+// TCGdx API integration for Pokemon TCG product data and pricing
 export interface PokemonCard {
   id: string
   name: string
   set: string
+  setId: string
   number: string
   rarity: string
   imageUrl: string
@@ -11,6 +12,7 @@ export interface PokemonCard {
   midPrice: number
   highPrice: number
   lastUpdated: string
+  language: 'en' | 'ja'
   tcgplayer?: {
     url: string
     updatedAt: string
@@ -53,6 +55,7 @@ export interface PokemonSet {
   releaseDate: string
   symbolUrl: string
   logoUrl: string
+  language: 'en' | 'ja'
 }
 
 export interface PokemonTCGResponse {
@@ -64,22 +67,16 @@ export interface PokemonTCGResponse {
 }
 
 class PokemonTCGAPI {
-  private baseUrl = 'https://api.pokemontcg.io/v2'
-  private apiKey: string
+  private baseUrl = 'https://api.tcgdx.net/v1'
 
   constructor() {
-    this.apiKey = process.env.POKEMON_TCG_API_KEY || ''
+    // No API key needed for TCGdx
   }
 
   private async makeRequest<T>(endpoint: string, params: Record<string, string> = {}): Promise<T> {
     const url = new URL(`${this.baseUrl}${endpoint}`)
 
-    // Add API key if available (optional - works without it but with rate limits)
-    if (this.apiKey) {
-      url.searchParams.set('X-Api-Key', this.apiKey)
-    }
-
-    // Add other parameters
+    // Add parameters
     Object.entries(params).forEach(([key, value]) => {
       url.searchParams.set(key, value)
     })
@@ -89,7 +86,7 @@ class PokemonTCGAPI {
       'User-Agent': 'Elite-Cards/1.0'
     }
 
-    // Add timeout and retry logic
+    // Add timeout
     const controller = new AbortController()
     const timeoutId = setTimeout(() => controller.abort(), 60000) // 60 second timeout
 
@@ -105,7 +102,7 @@ class PokemonTCGAPI {
         if (response.status === 429) {
           throw new Error('Rate limit exceeded. Please try again later.')
         }
-        throw new Error(`Pokemon TCG API error: ${response.status} ${response.statusText}`)
+        throw new Error(`TCGdx API error: ${response.status} ${response.statusText}`)
       }
 
       return response.json()
@@ -113,82 +110,143 @@ class PokemonTCGAPI {
       clearTimeout(timeoutId)
 
       if (error instanceof Error && error.name === 'AbortError') {
-        throw new Error('Request timeout. The Pokemon TCG API is taking too long to respond.')
+        throw new Error('Request timeout. The TCGdx API is taking too long to respond.')
       }
 
       throw error
     }
   }
 
-  async searchCards(query: string, page = 1, pageSize = 250): Promise<PokemonTCGResponse> {
-    const response = await this.makeRequest<{ data: unknown[]; page: number; pageSize: number; count: number; totalCount: number }>('/cards', {
-      q: query,
-      page: page.toString(),
-      pageSize: pageSize.toString()
-    })
+  async searchCards(query: string, language: 'en' | 'ja' = 'en', page = 1, pageSize = 250): Promise<PokemonTCGResponse> {
+    try {
+      const params: Record<string, string> = {
+        page: page.toString(),
+        limit: pageSize.toString(),
+        language: language
+      }
 
-    // Transform the response to include pricing data
-    const transformedCards = response.data.map((card: unknown) => this.transformCardData(card as Record<string, unknown>))
+      if (query.trim()) {
+        params.q = query
+      }
 
-    return {
-      ...response,
-      data: transformedCards
+      const response = await this.makeRequest<{ data: unknown[]; page: number; limit: number; count: number; totalCount: number }>('/cards', params)
+
+      // Transform the response to include pricing data
+      const transformedCards = response.data.map((card: unknown) => this.transformCardData(card as Record<string, unknown>, language))
+
+      return {
+        data: transformedCards,
+        page: response.page,
+        pageSize: response.limit,
+        count: response.count,
+        totalCount: response.totalCount
+      }
+    } catch (error) {
+      console.error('Error searching cards:', error)
+      throw new Error('Failed to search cards')
     }
   }
 
-  async getCardById(id: string): Promise<{ data: PokemonCard }> {
-    const response = await this.makeRequest<{ data: Record<string, unknown> }>(`/cards/${id}`)
-    return {
-      data: this.transformCardData(response.data)
+  async getCardById(id: string, language: 'en' | 'ja' = 'en'): Promise<{ data: PokemonCard }> {
+    try {
+      const response = await this.makeRequest<{ data: Record<string, unknown> }>(`/cards/${id}?language=${language}`)
+      return {
+        data: this.transformCardData(response.data, language)
+      }
+    } catch (error) {
+      console.error('Error getting card by ID:', error)
+      throw new Error('Failed to get card')
     }
   }
 
-  async getCardsBySet(setId: string, page = 1, pageSize = 250): Promise<PokemonTCGResponse> {
-    const response = await this.makeRequest<{ data: unknown[]; page: number; pageSize: number; count: number; totalCount: number }>('/cards', {
-      q: `set.id:${setId}`,
-      page: page.toString(),
-      pageSize: pageSize.toString()
-    })
+  async getCardsBySet(setId: string, language: 'en' | 'ja' = 'en', page = 1, pageSize = 250): Promise<PokemonTCGResponse> {
+    try {
+      const params: Record<string, string> = {
+        page: page.toString(),
+        limit: pageSize.toString(),
+        language: language,
+        'set.id': setId
+      }
 
-    // Transform the response to include pricing data
-    const transformedCards = response.data.map((card: unknown) => this.transformCardData(card as Record<string, unknown>))
+      const response = await this.makeRequest<{ data: unknown[]; page: number; limit: number; count: number; totalCount: number }>('/cards', params)
 
-    return {
-      ...response,
-      data: transformedCards
+      // Transform the response to include pricing data
+      const transformedCards = response.data.map((card: unknown) => this.transformCardData(card as Record<string, unknown>, language))
+
+      return {
+        data: transformedCards,
+        page: response.page,
+        pageSize: response.limit,
+        count: response.count,
+        totalCount: response.totalCount
+      }
+    } catch (error) {
+      console.error('Error getting cards by set:', error)
+      throw new Error('Failed to get cards by set')
     }
   }
 
-  async getSets(): Promise<{ data: PokemonSet[] }> {
-    return this.makeRequest<{ data: PokemonSet[] }>('/sets')
+  async getSets(language: 'en' | 'ja' = 'en'): Promise<{ data: PokemonSet[] }> {
+    try {
+      const response = await this.makeRequest<{ data: unknown[] }>(`/sets?language=${language}`)
+      const transformedSets = response.data.map((set: unknown) => this.transformSetData(set as Record<string, unknown>, language))
+      return { data: transformedSets }
+    } catch (error) {
+      console.error('Error getting sets:', error)
+      throw new Error('Failed to get sets')
+    }
   }
 
-  async getSetById(id: string): Promise<{ data: PokemonSet }> {
-    return this.makeRequest<{ data: PokemonSet }>(`/sets/${id}`)
+  async getSetById(id: string, language: 'en' | 'ja' = 'en'): Promise<{ data: PokemonSet }> {
+    try {
+      const response = await this.makeRequest<{ data: Record<string, unknown> }>(`/sets/${id}?language=${language}`)
+      return {
+        data: this.transformSetData(response.data, language)
+      }
+    } catch (error) {
+      console.error('Error getting set by ID:', error)
+      throw new Error('Failed to get set')
+    }
   }
 
-  // Transform raw Pokemon TCG API data to our format
-  private transformCardData(card: Record<string, unknown>): PokemonCard {
+  // Transform TCGdx API data to our format
+  private transformCardData(card: Record<string, unknown>, language: 'en' | 'ja'): PokemonCard {
     const pricing = this.extractPricingFromCard(card)
 
     return {
       id: String(card.id || ''),
       name: String(card.name || ''),
       set: String((card.set as Record<string, unknown>)?.name || ''),
-      number: String(card.number || ''),
+      setId: String((card.set as Record<string, unknown>)?.id || ''),
+      number: String(card.localId || card.id || ''),
       rarity: String(card.rarity || ''),
-      imageUrl: String((card.images as Record<string, unknown>)?.large || (card.images as Record<string, unknown>)?.small || ''),
+      imageUrl: String(card.image || ''),
       marketPrice: pricing.marketPrice,
       lowPrice: pricing.lowPrice,
       midPrice: pricing.midPrice,
       highPrice: pricing.highPrice,
       lastUpdated: pricing.lastUpdated,
+      language: language,
       tcgplayer: card.tcgplayer as PokemonCard['tcgplayer'],
       cardmarket: card.cardmarket as PokemonCard['cardmarket']
     }
   }
 
-  // Extract pricing data from Pokemon TCG API response
+  // Transform TCGdx API set data to our format
+  private transformSetData(set: Record<string, unknown>, language: 'en' | 'ja'): PokemonSet {
+    return {
+      id: String(set.id || ''),
+      name: String(set.name || ''),
+      series: String((set.serie as Record<string, unknown>)?.name || ''),
+      total: Number((set.cardCount as Record<string, unknown>)?.total || 0),
+      releaseDate: String(set.releaseDate || ''),
+      symbolUrl: String(set.logo || ''),
+      logoUrl: String(set.logo || ''),
+      language: language
+    }
+  }
+
+  // Extract pricing data from TCGdx API response
   private extractPricingFromCard(card: Record<string, unknown>): {
     marketPrice: number
     lowPrice: number
@@ -237,8 +295,8 @@ class PokemonTCGAPI {
     }
   }
 
-  // Get market pricing data from Pokemon TCG API (no external API needed)
-  async getMarketPricing(cardName: string, set: string): Promise<{
+  // Get market pricing data from TCGdx SDK
+  async getMarketPricing(cardName: string, set: string, language: 'en' | 'ja' = 'en'): Promise<{
     marketPrice: number
     lowPrice: number
     midPrice: number
@@ -247,7 +305,7 @@ class PokemonTCGAPI {
   }> {
     try {
       // Search for the card to get current pricing
-      const response = await this.searchCards(`name:"${cardName}" set.name:"${set}"`, 1, 1)
+      const response = await this.searchCards(cardName, language, 1, 1)
 
       if (response.data.length > 0) {
         const card = response.data[0]
@@ -260,7 +318,7 @@ class PokemonTCGAPI {
         }
       }
     } catch (error) {
-      console.warn('Error fetching pricing from Pokemon TCG API:', error)
+      console.warn('Error fetching pricing from TCGdx:', error)
     }
 
     // Fallback pricing based on card rarity and set
@@ -317,7 +375,7 @@ class PokemonTCGAPI {
     return 'Rare'
   }
 
-  // Convert Pokemon TCG API data to our product format
+  // Convert TCGdx data to our product format
   convertToProduct(card: PokemonCard, pricing: {
     marketPrice: number
     lowPrice: number
@@ -360,19 +418,62 @@ class PokemonTCGAPI {
 export const pokemonTCG = new PokemonTCGAPI()
 
 // Helper function to search for Pokemon cards
-export async function searchPokemonCards(query: string, page = 1, pageSize = 250): Promise<PokemonCard[]> {
-  const response = await pokemonTCG.searchCards(query, page, pageSize)
+export async function searchPokemonCards(query: string, language: 'en' | 'ja' = 'en', page = 1, pageSize = 250): Promise<PokemonCard[]> {
+  const response = await pokemonTCG.searchCards(query, language, page, pageSize)
   return response.data
 }
 
 // Helper function to get cards from a specific set
-export async function getCardsFromSet(setId: string, page = 1, pageSize = 250): Promise<PokemonCard[]> {
-  const response = await pokemonTCG.getCardsBySet(setId, page, pageSize)
+export async function getCardsFromSet(setId: string, language: 'en' | 'ja' = 'en', page = 1, pageSize = 250): Promise<PokemonCard[]> {
+  const response = await pokemonTCG.getCardsBySet(setId, language, page, pageSize)
   return response.data
 }
 
 // Helper function to get all available sets
-export async function getAllPokemonSets(): Promise<PokemonSet[]> {
-  const response = await pokemonTCG.getSets()
+export async function getAllPokemonSets(language: 'en' | 'ja' = 'en'): Promise<PokemonSet[]> {
+  const response = await pokemonTCG.getSets(language)
   return response.data
 }
+
+// Helper function to get a card by ID
+export async function getCardById(id: string, language: 'en' | 'ja' = 'en'): Promise<PokemonCard> {
+  const response = await pokemonTCG.getCardById(id, language)
+  return response.data
+}
+
+// Helper function to get market pricing
+export async function getMarketPricing(cardName: string, set: string, language: 'en' | 'ja' = 'en'): Promise<{
+  marketPrice: number
+  lowPrice: number
+  midPrice: number
+  highPrice: number
+  lastUpdated: string
+}> {
+  return pokemonTCG.getMarketPricing(cardName, set, language)
+}
+
+// Helper function to convert card to product
+export function convertToProduct(card: PokemonCard, pricing: {
+  marketPrice: number
+  lowPrice: number
+  midPrice: number
+  highPrice: number
+  lastUpdated: string
+}): {
+  title: string
+  description: string
+  price: number
+  imageUrl: string
+  set: string
+  is_single: boolean
+  pokemonCardId: string
+  marketData: {
+    lowPrice: number
+    midPrice: number
+    highPrice: number
+    lastUpdated: string
+  }
+} {
+  return pokemonTCG.convertToProduct(card, pricing)
+}
+

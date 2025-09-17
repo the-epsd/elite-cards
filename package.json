@@ -16,6 +16,7 @@
     "@bluebeela/nextjs-shopify-auth": "^1.0.2",
     "@shopify/shopify-api": "^11.14.1",
     "@supabase/supabase-js": "^2.57.4",
+    "@tcgdex/sdk": "^2.7.1",
     "@types/crypto-js": "^4.2.2",
     "@types/jsonwebtoken": "^9.0.10",
     "cookie": "^1.0.2",

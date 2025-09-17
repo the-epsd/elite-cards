@@ -16,14 +16,20 @@ export async function GET(request: NextRequest) {
 
     const { searchParams } = new URL(request.url)
     const query = searchParams.get('q') || ''
+    const language = (searchParams.get('language') as 'en' | 'ja') || 'en'
     const page = parseInt(searchParams.get('page') || '1')
     const pageSize = parseInt(searchParams.get('pageSize') || '50')
+    const setId = searchParams.get('setId') || ''
 
-    if (!query) {
-      return NextResponse.json({ error: 'Query parameter is required' }, { status: 400 })
+    let cards
+    if (setId) {
+      // Get cards from specific set
+      const { getCardsFromSet } = await import('@/lib/pokemon-tcg')
+      cards = await getCardsFromSet(setId, language, page, pageSize)
+    } else {
+      // Search cards
+      cards = await searchPokemonCards(query, language, page, pageSize)
     }
-
-    const cards = await searchPokemonCards(query, 'en', page, pageSize)
 
     return NextResponse.json({
       success: true,
@@ -42,13 +48,13 @@ export async function GET(request: NextRequest) {
 
     if (error instanceof Error) {
       if (error.message.includes('timeout')) {
-        errorMessage = 'The Pokemon TCG API is taking too long to respond. Please try again.'
+        errorMessage = 'The TCGdx API is taking too long to respond. Please try again.'
         statusCode = 504
       } else if (error.message.includes('Rate limit')) {
         errorMessage = 'Too many requests. Please wait a moment and try again.'
         statusCode = 429
-      } else if (error.message.includes('Pokemon TCG API error')) {
-        errorMessage = 'Pokemon TCG API is currently unavailable. Please try again later.'
+      } else if (error.message.includes('TCGdx API error')) {
+        errorMessage = 'TCGdx API is currently unavailable. Please try again later.'
         statusCode = 503
       }
     }

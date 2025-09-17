@@ -1,10 +1,11 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Sidebar from '@/components/Sidebar'
 import PageTransition from '@/components/PageTransition'
 import { useNotification } from '@/contexts/NotificationContext'
+import { getExpansions, getSetsByExpansion, type Expansion, type Set } from '@/lib/expansions'
 
 export default function CreateProductPage() {
   const { showSuccess, showError } = useNotification()
@@ -13,11 +14,28 @@ export default function CreateProductPage() {
     description: '',
     price: '',
     imageUrl: '',
+    expansion: '',
     set: '',
     isSingle: false
   })
   const [loading, setLoading] = useState(false)
+  const [expansions, setExpansions] = useState<Expansion[]>([])
+  const [availableSets, setAvailableSets] = useState<Set[]>([])
   const router = useRouter()
+
+  useEffect(() => {
+    setExpansions(getExpansions())
+  }, [])
+
+  useEffect(() => {
+    if (formData.expansion) {
+      setAvailableSets(getSetsByExpansion(formData.expansion))
+      // Reset set selection when expansion changes
+      setFormData(prev => ({ ...prev, set: '' }))
+    } else {
+      setAvailableSets([])
+    }
+  }, [formData.expansion])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -129,40 +147,59 @@ export default function CreateProductPage() {
                     </div>
 
                     <div className="space-y-2">
-                      <label htmlFor="set" className="block text-sm font-semibold text-gray-800">
-                        Card Set *
+                      <label htmlFor="expansion" className="block text-sm font-semibold text-gray-800">
+                        Expansion *
                       </label>
                       <select
-                        name="set"
-                        id="set"
+                        name="expansion"
+                        id="expansion"
                         required
-                        value={formData.set}
+                        value={formData.expansion}
                         onChange={handleChange}
                         className="w-full px-4 py-3 border border-gray-200 rounded-xl shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-gray-900 transition-all duration-200 hover:border-gray-300"
                       >
-                        <option value="">Select a set</option>
-                        <option value="Base Set">Base Set</option>
-                        <option value="Jungle">Jungle</option>
-                        <option value="Fossil">Fossil</option>
-                        <option value="Team Rocket">Team Rocket</option>
-                        <option value="Gym Heroes">Gym Heroes</option>
-                        <option value="Gym Challenge">Gym Challenge</option>
-                        <option value="Neo Genesis">Neo Genesis</option>
-                        <option value="Neo Discovery">Neo Discovery</option>
-                        <option value="Neo Revelation">Neo Revelation</option>
-                        <option value="Neo Destiny">Neo Destiny</option>
-                        <option value="Expedition">Expedition</option>
-                        <option value="Aquapolis">Aquapolis</option>
-                        <option value="Skyridge">Skyridge</option>
-                        <option value="Ruby & Sapphire">Ruby & Sapphire</option>
-                        <option value="Diamond & Pearl">Diamond & Pearl</option>
-                        <option value="Black & White">Black & White</option>
-                        <option value="XY">XY</option>
-                        <option value="Sun & Moon">Sun & Moon</option>
-                        <option value="Sword & Shield">Sword & Shield</option>
-                        <option value="Scarlet & Violet">Scarlet & Violet</option>
+                        <option value="">Select an expansion</option>
+                        {expansions.map((expansion) => (
+                          <option key={expansion.id} value={expansion.id}>
+                            {expansion.name}
+                          </option>
+                        ))}
                       </select>
                     </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <label htmlFor="set" className="block text-sm font-semibold text-gray-800">
+                      Set *
+                    </label>
+                    <select
+                      name="set"
+                      id="set"
+                      required
+                      value={formData.set}
+                      onChange={handleChange}
+                      disabled={!formData.expansion || availableSets.length === 0}
+                      className="w-full px-4 py-3 border border-gray-200 rounded-xl shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-gray-900 transition-all duration-200 hover:border-gray-300 disabled:bg-gray-100 disabled:cursor-not-allowed"
+                    >
+                      <option value="">
+                        {!formData.expansion
+                          ? 'Select an expansion first'
+                          : availableSets.length === 0
+                            ? 'No sets available'
+                            : 'Select a set'
+                        }
+                      </option>
+                      {availableSets.map((set) => (
+                        <option key={set.id} value={set.id}>
+                          {set.name} ({set.code})
+                        </option>
+                      ))}
+                    </select>
+                    {formData.expansion && availableSets.length > 0 && (
+                      <p className="text-sm text-gray-500">
+                        {availableSets.length} sets available in {expansions.find(e => e.id === formData.expansion)?.name}
+                      </p>
+                    )}
                   </div>
 
                   <div className="bg-gray-50 rounded-xl p-6 space-y-4">

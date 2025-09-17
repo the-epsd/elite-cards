@@ -8,6 +8,7 @@ import Sidebar from '@/components/Sidebar'
 import SkeletonLoader from '@/components/SkeletonLoader'
 import PageTransition from '@/components/PageTransition'
 import { useNotification } from '@/contexts/NotificationContext'
+import { getExpansions, getSetsByExpansion, getExpansionBySetId, type Expansion, type Set } from '@/lib/expansions'
 
 interface Product {
   id: string
@@ -15,6 +16,7 @@ interface Product {
   description: string
   price: number
   image_url: string
+  expansion: string
   set: string
   is_single: boolean
   created_at: string
@@ -29,14 +31,29 @@ export default function EditProductPage() {
     description: '',
     price: '',
     imageUrl: '',
+    expansion: '',
     set: '',
     isSingle: false
   })
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
+  const [expansions, setExpansions] = useState<Expansion[]>([])
+  const [availableSets, setAvailableSets] = useState<Set[]>([])
   const router = useRouter()
   const params = useParams()
   const productId = params.id as string
+
+  useEffect(() => {
+    setExpansions(getExpansions())
+  }, [])
+
+  useEffect(() => {
+    if (formData.expansion) {
+      setAvailableSets(getSetsByExpansion(formData.expansion))
+    } else {
+      setAvailableSets([])
+    }
+  }, [formData.expansion])
 
   const fetchProduct = useCallback(async () => {
     try {
@@ -45,11 +62,15 @@ export default function EditProductPage() {
         const data = await response.json()
         const productData = data.product
         setProduct(productData)
+        // Determine expansion from set if not directly available
+        const expansion = productData.expansion || getExpansionBySetId(productData.set)?.id || ''
+
         setFormData({
           title: productData.title,
           description: productData.description,
           price: productData.price.toString(),
           imageUrl: productData.image_url,
+          expansion: expansion,
           set: productData.set,
           isSingle: productData.is_single || false
         })
@@ -256,8 +277,29 @@ export default function EditProductPage() {
                         </div>
 
                         <div className="space-y-2">
+                          <label htmlFor="expansion" className="block text-sm font-semibold text-gray-800">
+                            Expansion *
+                          </label>
+                          <select
+                            name="expansion"
+                            id="expansion"
+                            required
+                            value={formData.expansion}
+                            onChange={handleChange}
+                            className="w-full px-4 py-3 border border-gray-200 rounded-xl shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-gray-900 transition-all duration-200 hover:border-gray-300"
+                          >
+                            <option value="">Select an expansion</option>
+                            {expansions.map((expansion) => (
+                              <option key={expansion.id} value={expansion.id}>
+                                {expansion.name}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+
+                        <div className="space-y-2">
                           <label htmlFor="set" className="block text-sm font-semibold text-gray-800">
-                            Card Set *
+                            Set *
                           </label>
                           <select
                             name="set"
@@ -265,30 +307,28 @@ export default function EditProductPage() {
                             required
                             value={formData.set}
                             onChange={handleChange}
-                            className="w-full px-4 py-3 border border-gray-200 rounded-xl shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-gray-900 transition-all duration-200 hover:border-gray-300"
+                            disabled={!formData.expansion || availableSets.length === 0}
+                            className="w-full px-4 py-3 border border-gray-200 rounded-xl shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-gray-900 transition-all duration-200 hover:border-gray-300 disabled:bg-gray-100 disabled:cursor-not-allowed"
                           >
-                            <option value="">Select a set</option>
-                            <option value="Base Set">Base Set</option>
-                            <option value="Jungle">Jungle</option>
-                            <option value="Fossil">Fossil</option>
-                            <option value="Team Rocket">Team Rocket</option>
-                            <option value="Gym Heroes">Gym Heroes</option>
-                            <option value="Gym Challenge">Gym Challenge</option>
-                            <option value="Neo Genesis">Neo Genesis</option>
-                            <option value="Neo Discovery">Neo Discovery</option>
-                            <option value="Neo Revelation">Neo Revelation</option>
-                            <option value="Neo Destiny">Neo Destiny</option>
-                            <option value="Expedition">Expedition</option>
-                            <option value="Aquapolis">Aquapolis</option>
-                            <option value="Skyridge">Skyridge</option>
-                            <option value="Ruby & Sapphire">Ruby & Sapphire</option>
-                            <option value="Diamond & Pearl">Diamond & Pearl</option>
-                            <option value="Black & White">Black & White</option>
-                            <option value="XY">XY</option>
-                            <option value="Sun & Moon">Sun & Moon</option>
-                            <option value="Sword & Shield">Sword & Shield</option>
-                            <option value="Scarlet & Violet">Scarlet & Violet</option>
+                            <option value="">
+                              {!formData.expansion
+                                ? 'Select an expansion first'
+                                : availableSets.length === 0
+                                  ? 'No sets available'
+                                  : 'Select a set'
+                              }
+                            </option>
+                            {availableSets.map((set) => (
+                              <option key={set.id} value={set.id}>
+                                {set.name} ({set.code})
+                              </option>
+                            ))}
                           </select>
+                          {formData.expansion && availableSets.length > 0 && (
+                            <p className="text-sm text-gray-500">
+                              {availableSets.length} sets available in {expansions.find(e => e.id === formData.expansion)?.name}
+                            </p>
+                          )}
                         </div>
                       </div>
 

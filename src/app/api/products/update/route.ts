@@ -15,7 +15,7 @@ export async function PUT(request: NextRequest) {
     }
 
     const body = await request.json()
-    const { productId, title, description, price, imageUrl, set, isSingle } = body
+    const { productId, title, description, price, imageUrl, expansion, set, isSingle } = body
 
     if (!productId) {
       return NextResponse.json(
@@ -39,6 +39,7 @@ export async function PUT(request: NextRequest) {
       description?: string
       price?: number
       image_url?: string
+      expansion?: string
       set?: string
       is_single?: boolean
     } = {}
@@ -46,6 +47,7 @@ export async function PUT(request: NextRequest) {
     if (description !== undefined) updateData.description = description
     if (price !== undefined) updateData.price = parseFloat(price)
     if (imageUrl !== undefined) updateData.image_url = imageUrl
+    if (expansion !== undefined) updateData.expansion = expansion
     if (set !== undefined) updateData.set = set
     if (isSingle !== undefined) updateData.is_single = isSingle
 

@@ -21,6 +21,7 @@ export interface Product {
   description: string
   price: number
   image_url: string
+  expansion: string
   set: string
   created_by: string
   is_single: boolean
@@ -127,6 +128,7 @@ export async function createProduct(productData: {
   description: string
   price: number
   image_url: string
+  expansion: string
   set: string
   created_by: string
   is_single?: boolean

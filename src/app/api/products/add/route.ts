@@ -15,9 +15,9 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json()
-    const { title, description, price, imageUrl, set, isSingle } = body
+    const { title, description, price, imageUrl, expansion, set, isSingle } = body
 
-    if (!title || !description || !price || !imageUrl || !set) {
+    if (!title || !description || !price || !imageUrl || !expansion || !set) {
       return NextResponse.json(
         { error: 'Missing required fields' },
         { status: 400 }
@@ -29,6 +29,7 @@ export async function POST(request: NextRequest) {
       description,
       price: parseFloat(price),
       image_url: imageUrl,
+      expansion,
       set,
       created_by: session.userId,
       is_single: isSingle || false,

@@ -14,6 +14,7 @@ interface Product {
   description: string
   price: number
   image_url: string
+  expansion: string
   set: string
   created_at: string
 }
@@ -313,7 +314,10 @@ export default function CatalogPage() {
                           </div>
                           <div className="p-4">
                             <h4 className="font-medium text-gray-900 mb-2">{product.title}</h4>
-                            <p className="text-sm text-gray-500 mb-3 line-clamp-2">{product.description}</p>
+                            <p className="text-sm text-gray-500 mb-2 line-clamp-2">{product.description}</p>
+                            <div className="text-xs text-gray-400 mb-3">
+                              <span className="font-medium">{product.expansion}</span> • {product.set}
+                            </div>
                             <div className="flex items-center justify-between">
                               <span className="text-lg font-semibold text-indigo-600">${product.price}</span>
                               {addedProductIds.has(product.id) ? (

@@ -30,7 +30,6 @@ export interface Product {
     high_price: number
     last_updated: string
   }
-  auto_price_sync: boolean
   created_at: string
   updated_at: string
 }
@@ -137,14 +136,12 @@ export async function createProduct(productData: {
     high_price: number
     last_updated: string
   }
-  auto_price_sync?: boolean
 }): Promise<Product> {
   const { data, error } = await supabase
     .from('products')
     .insert({
       ...productData,
       is_single: productData.is_single || false,
-      auto_price_sync: productData.auto_price_sync || false,
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString()
     })

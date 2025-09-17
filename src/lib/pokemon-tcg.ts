@@ -106,7 +106,8 @@ class PokemonTCGAPI {
           name: sampleCard.name,
           rarity: sampleCard.rarity,
           set: sampleCard.set,
-          image: sampleCard.image
+          image: sampleCard.image,
+          imageUrl: this.processImageUrl(String(sampleCard.image || ''))
         })
         console.log('Card pricing data:', {
           tcgplayer: sampleCard.tcgplayer,
@@ -564,12 +565,18 @@ class PokemonTCGAPI {
 
     // If it's a relative URL, try to construct a full URL
     if (imageUrl.startsWith('/')) {
-      return `https://images.pokemontcg.io${imageUrl}`
+      return `https://assets.tcgdx.net${imageUrl}`
     }
 
-    // If it's just a filename or path, try common TCGdex image patterns
+    // If it's a TCGdex path (like "en/xy/xy6/39"), try different URL patterns
+    if (imageUrl.includes('/') && !imageUrl.includes('http') && !imageUrl.includes('.')) {
+      // Try the official TCGdex image URL format
+      return `https://images.pokemontcg.io/${imageUrl}.png`
+    }
+
+    // If it's just a filename or path with extension, try common TCGdex image patterns
     if (imageUrl.includes('.') && !imageUrl.includes('http')) {
-      return `https://images.pokemontcg.io/${imageUrl}`
+      return `https://assets.tcgdx.net/${imageUrl}`
     }
 
     // Return empty string for invalid URLs

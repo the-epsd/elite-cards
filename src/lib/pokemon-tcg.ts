@@ -89,15 +89,35 @@ class PokemonTCGAPI {
       'User-Agent': 'Elite-Cards/1.0'
     }
 
-    const response = await fetch(url.toString(), {
-      headers
-    })
+    // Add timeout and retry logic
+    const controller = new AbortController()
+    const timeoutId = setTimeout(() => controller.abort(), 10000) // 10 second timeout
 
-    if (!response.ok) {
-      throw new Error(`Pokemon TCG API error: ${response.status} ${response.statusText}`)
+    try {
+      const response = await fetch(url.toString(), {
+        headers,
+        signal: controller.signal
+      })
+
+      clearTimeout(timeoutId)
+
+      if (!response.ok) {
+        if (response.status === 429) {
+          throw new Error('Rate limit exceeded. Please try again later.')
+        }
+        throw new Error(`Pokemon TCG API error: ${response.status} ${response.statusText}`)
+      }
+
+      return response.json()
+    } catch (error) {
+      clearTimeout(timeoutId)
+
+      if (error instanceof Error && error.name === 'AbortError') {
+        throw new Error('Request timeout. The Pokemon TCG API is taking too long to respond.')
+      }
+
+      throw error
     }
-
-    return response.json()
   }
 
   async searchCards(query: string, page = 1, pageSize = 250): Promise<PokemonTCGResponse> {

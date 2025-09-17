@@ -63,15 +63,21 @@ export default function PokemonAdminPage() {
       if (setsResponse.ok) {
         const setsData = await setsResponse.json()
         setSets(setsData.sets)
+      } else {
+        const errorData = await setsResponse.json().catch(() => ({}))
+        console.warn('Failed to load Pokemon sets:', errorData.error || 'Unknown error')
+        // Don't show error for sets as it's not critical for basic functionality
       }
 
       if (usersResponse.ok) {
         const usersData = await usersResponse.json()
         setUsers(usersData.users.filter((user: User) => user.role === 'end_user'))
+      } else {
+        showError('Failed to load users. Please refresh the page.')
       }
     } catch (error) {
       console.error('Error fetching initial data:', error)
-      showError('Failed to load initial data')
+      showError('Network error. Please check your connection and refresh the page.')
     } finally {
       setLoading(false)
     }
@@ -102,11 +108,13 @@ export default function PokemonAdminPage() {
         const data = await response.json()
         setCards(data.cards)
       } else {
-        showError('Failed to search cards')
+        const errorData = await response.json().catch(() => ({}))
+        const errorMessage = errorData.error || 'Failed to search cards'
+        showError(errorMessage)
       }
     } catch (error) {
       console.error('Error searching cards:', error)
-      showError('Failed to search cards')
+      showError('Network error. Please check your connection and try again.')
     } finally {
       setSearching(false)
     }

@@ -42,9 +42,9 @@ export async function GET(request: NextRequest) {
       }))
     })
   } catch (error) {
-    console.error('Error debugging TCGdx:', error)
+    console.error('Error debugging TCGdex:', error)
     return NextResponse.json(
-      { error: 'Failed to debug TCGdx', details: error instanceof Error ? error.message : 'Unknown error' },
+      { error: 'Failed to debug TCGdex', details: error instanceof Error ? error.message : 'Unknown error' },
       { status: 500 }
     )
   }

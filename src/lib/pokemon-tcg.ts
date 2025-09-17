@@ -87,25 +87,30 @@ class PokemonTCGAPI {
       let cards: unknown[] = []
 
       if (query.trim()) {
-        // Search by name using TCGdx SDK
+        // Search by name using TCGdex SDK
         const queryBuilder = Query.create().contains('name', query)
         cards = await tcgdex.card.list(queryBuilder)
-        console.log(`TCGdx search for "${query}" returned ${cards.length} cards`)
+        console.log(`TCGdex search for "${query}" returned ${cards.length} cards`)
       } else {
         // Get all cards with pagination
         const queryBuilder = Query.create().paginate(page, pageSize)
         cards = await tcgdex.card.list(queryBuilder)
-        console.log(`TCGdx paginated request returned ${cards.length} cards`)
+        console.log(`TCGdex paginated request returned ${cards.length} cards`)
       }
 
-      // Log raw card data for debugging
+      // Log raw card data for debugging (avoid circular references)
       if (cards.length > 0) {
-        console.log('Sample raw card data:', JSON.stringify(cards[0], null, 2))
+        const sampleCard = cards[0] as Record<string, unknown>
+        console.log('Sample card info:', {
+          id: sampleCard.id,
+          name: sampleCard.name,
+          rarity: sampleCard.rarity,
+          set: sampleCard.set,
+          image: sampleCard.image
+        })
         console.log('Card pricing data:', {
-          tcgplayer: (cards[0] as Record<string, unknown>)?.tcgplayer,
-          cardmarket: (cards[0] as Record<string, unknown>)?.cardmarket,
-          rarity: (cards[0] as Record<string, unknown>)?.rarity,
-          set: (cards[0] as Record<string, unknown>)?.set
+          tcgplayer: sampleCard.tcgplayer,
+          cardmarket: sampleCard.cardmarket
         })
       }
 
@@ -248,8 +253,6 @@ class PokemonTCGAPI {
     highPrice: number
     lastUpdated: string
   } {
-    console.log('Extracting pricing for card:', card.name, 'Rarity:', card.rarity, 'Set:', (card.set as Record<string, unknown>)?.name)
-
     // Try TCGPlayer pricing first
     const tcgplayer = card.tcgplayer as Record<string, unknown>
     if (tcgplayer?.prices) {
@@ -257,7 +260,6 @@ class PokemonTCGAPI {
       const normalPrices = (prices.normal || prices.holofoil || prices.reverseHolofoil) as Record<string, unknown>
 
       if (normalPrices && (normalPrices.market || normalPrices.mid)) {
-        console.log('Using TCGPlayer pricing:', normalPrices)
         return {
           marketPrice: Number(normalPrices.market || normalPrices.mid || 0),
           lowPrice: Number(normalPrices.low || 0),
@@ -273,7 +275,6 @@ class PokemonTCGAPI {
     if (cardmarket?.prices) {
       const prices = cardmarket.prices as Record<string, unknown>
       if (prices.averageSellPrice || prices.trendPrice) {
-        console.log('Using Cardmarket pricing:', prices)
         return {
           marketPrice: Number(prices.averageSellPrice || prices.trendPrice || 0),
           lowPrice: Number(prices.lowPrice || 0),
@@ -288,7 +289,6 @@ class PokemonTCGAPI {
     const cardRarity = String(card.rarity || '')
     const setName = String((card.set as Record<string, unknown>)?.name || '')
     const basePrice = this.getFallbackPrice(String(card.name || ''), setName, cardRarity)
-    console.log('Using fallback pricing:', { cardRarity, setName, basePrice })
 
     return {
       marketPrice: basePrice,
@@ -567,7 +567,7 @@ class PokemonTCGAPI {
       return `https://images.pokemontcg.io${imageUrl}`
     }
 
-    // If it's just a filename or path, try common TCGdx image patterns
+    // If it's just a filename or path, try common TCGdex image patterns
     if (imageUrl.includes('.') && !imageUrl.includes('http')) {
       return `https://images.pokemontcg.io/${imageUrl}`
     }

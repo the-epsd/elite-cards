@@ -60,13 +60,13 @@ export async function POST(request: NextRequest) {
 
     if (error instanceof Error) {
       if (error.message.includes('timeout')) {
-        errorMessage = 'The TCGdx API is taking too long to respond. Please try again.'
+        errorMessage = 'The Pokemon TCG API is taking too long to respond. Please try again.'
         statusCode = 504
       } else if (error.message.includes('Rate limit')) {
         errorMessage = 'Too many requests. Please wait a moment and try again.'
         statusCode = 429
-      } else if (error.message.includes('TCGdx API error')) {
-        errorMessage = 'TCGdx API is currently unavailable. Please try again later.'
+      } else if (error.message.includes('Pokemon TCG API error')) {
+        errorMessage = 'Pokemon TCG API is currently unavailable. Please try again later.'
         statusCode = 503
       }
     }

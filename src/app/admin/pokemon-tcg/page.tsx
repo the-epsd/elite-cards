@@ -280,9 +280,9 @@ export default function PokemonTCGPage() {
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {cards.map((card) => (
+                  {cards.map((card, index) => (
                     <div
-                      key={card.id}
+                      key={`${card.id}-${card.set}-${card.number}-${index}`}
                       className={`border rounded-lg p-4 cursor-pointer transition-colors ${selectedCards.has(card.id)
                         ? 'border-indigo-500 bg-indigo-50'
                         : 'border-gray-200 hover:border-gray-300'
@@ -298,17 +298,28 @@ export default function PokemonTCGPage() {
                               width={64}
                               height={80}
                               className="w-full h-full object-cover"
+                              onError={(e) => {
+                                console.log('Image load error for:', card.imageUrl)
+                                e.currentTarget.style.display = 'none'
+                              }}
                             />
                           ) : (
-                            <div className="text-gray-400 text-xs">No Image</div>
+                            <div className="text-gray-400 text-xs text-center">No Image</div>
                           )}
                         </div>
                         <div className="flex-1 min-w-0">
                           <h3 className="font-medium text-gray-900 truncate">{card.name}</h3>
-                          <p className="text-sm text-gray-500">{card.set} • {card.rarity}</p>
-                          <p className="text-sm font-medium text-green-600">${card.marketPrice}</p>
+                          <p className="text-sm text-gray-500 truncate">
+                            {card.set} • {card.rarity}
+                          </p>
+                          <p className="text-xs text-gray-400 truncate">
+                            #{card.number} • Set: {card.setId}
+                          </p>
+                          <p className="text-sm font-medium text-green-600">
+                            ${card.marketPrice.toFixed(2)}
+                          </p>
                           <p className="text-xs text-gray-400">
-                            Low: ${card.lowPrice} • High: ${card.highPrice}
+                            Low: ${card.lowPrice.toFixed(2)} • High: ${card.highPrice.toFixed(2)}
                           </p>
                         </div>
                       </div>

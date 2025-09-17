@@ -75,7 +75,7 @@ class PokemonTCGAPI {
     this.tcgdex = new TCGdx('en')
   }
 
-  private getTcgdex(language: 'en' | 'fr' | 'es' | 'it' | 'pt' | 'de'): TCGdx {
+  private getTcgdex(_language: 'en' | 'fr' | 'es' | 'it' | 'pt' | 'de'): TCGdx {
     // For now, only support English as the SDK doesn't support Japanese
     // In the future, we could create multiple instances for different languages
     return this.tcgdex
@@ -90,21 +90,38 @@ class PokemonTCGAPI {
         // Search by name using TCGdx SDK
         const queryBuilder = Query.create().contains('name', query)
         cards = await tcgdex.card.list(queryBuilder)
+        console.log(`TCGdx search for "${query}" returned ${cards.length} cards`)
       } else {
         // Get all cards with pagination
         const queryBuilder = Query.create().paginate(page, pageSize)
         cards = await tcgdex.card.list(queryBuilder)
+        console.log(`TCGdx paginated request returned ${cards.length} cards`)
+      }
+
+      // Log raw card data for debugging
+      if (cards.length > 0) {
+        console.log('Sample raw card data:', JSON.stringify(cards[0], null, 2))
+        console.log('Card pricing data:', {
+          tcgplayer: (cards[0] as Record<string, unknown>)?.tcgplayer,
+          cardmarket: (cards[0] as Record<string, unknown>)?.cardmarket,
+          rarity: (cards[0] as Record<string, unknown>)?.rarity,
+          set: (cards[0] as Record<string, unknown>)?.set
+        })
       }
 
       // Transform the response to include pricing data
       const transformedCards = cards.map((card: unknown) => this.transformCardData(card as Record<string, unknown>, language))
 
+      // Remove duplicates based on unique combination of name, set, and number
+      const uniqueCards = this.removeDuplicateCards(transformedCards)
+      console.log(`After removing duplicates: ${uniqueCards.length} unique cards`)
+
       return {
-        data: transformedCards,
+        data: uniqueCards,
         page,
         pageSize,
-        count: transformedCards.length,
-        totalCount: transformedCards.length
+        count: uniqueCards.length,
+        totalCount: uniqueCards.length
       }
     } catch (error) {
       console.error('Error searching cards:', error)
@@ -188,6 +205,7 @@ class PokemonTCGAPI {
   // Transform TCGdex data to our format
   private transformCardData(card: Record<string, unknown>, language: 'en' | 'fr' | 'es' | 'it' | 'pt' | 'de'): PokemonCard {
     const pricing = this.extractPricingFromCard(card)
+    const imageUrl = this.processImageUrl(String(card.image || ''))
 
     return {
       id: String(card.id || ''),
@@ -196,7 +214,7 @@ class PokemonTCGAPI {
       setId: String((card.set as Record<string, unknown>)?.id || ''),
       number: String(card.localId || card.id || ''),
       rarity: String(card.rarity || ''),
-      imageUrl: String(card.image || ''),
+      imageUrl: imageUrl,
       marketPrice: pricing.marketPrice,
       lowPrice: pricing.lowPrice,
       midPrice: pricing.midPrice,
@@ -230,13 +248,16 @@ class PokemonTCGAPI {
     highPrice: number
     lastUpdated: string
   } {
+    console.log('Extracting pricing for card:', card.name, 'Rarity:', card.rarity, 'Set:', (card.set as Record<string, unknown>)?.name)
+
     // Try TCGPlayer pricing first
     const tcgplayer = card.tcgplayer as Record<string, unknown>
     if (tcgplayer?.prices) {
       const prices = tcgplayer.prices as Record<string, unknown>
       const normalPrices = (prices.normal || prices.holofoil || prices.reverseHolofoil) as Record<string, unknown>
 
-      if (normalPrices) {
+      if (normalPrices && (normalPrices.market || normalPrices.mid)) {
+        console.log('Using TCGPlayer pricing:', normalPrices)
         return {
           marketPrice: Number(normalPrices.market || normalPrices.mid || 0),
           lowPrice: Number(normalPrices.low || 0),
@@ -251,17 +272,24 @@ class PokemonTCGAPI {
     const cardmarket = card.cardmarket as Record<string, unknown>
     if (cardmarket?.prices) {
       const prices = cardmarket.prices as Record<string, unknown>
-      return {
-        marketPrice: Number(prices.averageSellPrice || prices.trendPrice || 0),
-        lowPrice: Number(prices.lowPrice || 0),
-        midPrice: Number(prices.averageSellPrice || 0),
-        highPrice: Number(prices.suggestedPrice || prices.trendPrice || 0),
-        lastUpdated: String(cardmarket.updatedAt || new Date().toISOString())
+      if (prices.averageSellPrice || prices.trendPrice) {
+        console.log('Using Cardmarket pricing:', prices)
+        return {
+          marketPrice: Number(prices.averageSellPrice || prices.trendPrice || 0),
+          lowPrice: Number(prices.lowPrice || 0),
+          midPrice: Number(prices.averageSellPrice || 0),
+          highPrice: Number(prices.suggestedPrice || prices.trendPrice || 0),
+          lastUpdated: String(cardmarket.updatedAt || new Date().toISOString())
+        }
       }
     }
 
     // Fallback to estimated pricing based on rarity and set
-    const basePrice = this.getFallbackPrice(String(card.name || ''), String((card.set as Record<string, unknown>)?.name || ''))
+    const cardRarity = String(card.rarity || '')
+    const setName = String((card.set as Record<string, unknown>)?.name || '')
+    const basePrice = this.getFallbackPrice(String(card.name || ''), setName, cardRarity)
+    console.log('Using fallback pricing:', { cardRarity, setName, basePrice })
+
     return {
       marketPrice: basePrice,
       lowPrice: basePrice * 0.7,
@@ -308,8 +336,8 @@ class PokemonTCGAPI {
     }
   }
 
-  private getFallbackPrice(cardName: string, set: string): number {
-    // Simple fallback pricing logic
+  private getFallbackPrice(cardName: string, set: string, rarity?: string): number {
+    // Enhanced fallback pricing logic with more variation
     const rarityMultipliers: Record<string, number> = {
       'Common': 0.1,
       'Uncommon': 0.25,
@@ -318,7 +346,20 @@ class PokemonTCGAPI {
       'Rare Ultra': 2.0,
       'Rare Secret': 5.0,
       'Amazing Rare': 3.0,
-      'Radiant Rare': 2.5
+      'Radiant Rare': 2.5,
+      'Holo Rare': 1.5,
+      'Ultra Rare': 2.5,
+      'Secret Rare': 6.0,
+      'Full Art': 3.0,
+      'V': 1.5,
+      'VMAX': 2.5,
+      'VSTAR': 2.0,
+      'EX': 1.8,
+      'GX': 2.2,
+      'Break': 1.3,
+      'Prime': 4.0,
+      'Legend': 8.0,
+      'Shining': 10.0
     }
 
     const setMultipliers: Record<string, number> = {
@@ -331,14 +372,121 @@ class PokemonTCGAPI {
       'neo-genesis': 4.0,
       'neo-discovery': 4.0,
       'neo-revelation': 4.0,
-      'neo-destiny': 4.0
+      'neo-destiny': 4.0,
+      'base-set': 10.0,
+      'base-set-2': 9.0,
+      'legendary-collection': 8.5,
+      'ex-ruby-sapphire': 3.5,
+      'ex-sandstorm': 3.2,
+      'ex-dragon': 3.8,
+      'ex-team-magma-vs-team-aqua': 3.0,
+      'ex-hidden-legends': 3.5,
+      'ex-fire-red-leaf-green': 3.2,
+      'ex-team-rocket-returns': 3.8,
+      'ex-deoxys': 3.0,
+      'ex-emerald': 2.8,
+      'ex-unseen-forces': 3.2,
+      'ex-delta-species': 2.5,
+      'ex-legend-maker': 2.8,
+      'ex-holon-phantoms': 2.2,
+      'ex-crystal-guardians': 2.0,
+      'ex-dragon-frontiers': 2.5,
+      'ex-power-keepers': 2.8,
+      'diamond-pearl': 1.5,
+      'mysterious-treasures': 1.3,
+      'secret-wonders': 1.2,
+      'great-encounters': 1.1,
+      'majestic-dawn': 1.0,
+      'legends-awakened': 1.2,
+      'stormfront': 1.3,
+      'platinum': 1.0,
+      'rising-rivals': 0.9,
+      'supreme-victors': 0.8,
+      'arceus': 0.9,
+      'heartgold-soulsilver': 1.1,
+      'unleashed': 1.0,
+      'undaunted': 0.9,
+      'triumphant': 1.0,
+      'call-of-legends': 1.2,
+      'black-white': 0.8,
+      'emerging-powers': 0.7,
+      'noble-victories': 0.6,
+      'next-destinies': 0.7,
+      'dark-explorers': 0.8,
+      'dragons-exalted': 0.9,
+      'boundaries-crossed': 0.8,
+      'plasma-storm': 0.7,
+      'plasma-freeze': 0.8,
+      'plasma-blast': 0.7,
+      'legendary-treasures': 0.9,
+      'xy': 0.6,
+      'flashfire': 0.5,
+      'furious-fists': 0.5,
+      'phantom-forces': 0.6,
+      'primal-clash': 0.5,
+      'roaring-skies': 0.7,
+      'ancient-origins': 0.6,
+      'breakthrough': 0.5,
+      'breakpoint': 0.5,
+      'fates-collide': 0.4,
+      'steam-siege': 0.4,
+      'evolutions': 0.8,
+      'sun-moon': 0.4,
+      'guardians-rising': 0.5,
+      'burning-shadows': 0.4,
+      'crimson-invasion': 0.3,
+      'ultra-prism': 0.4,
+      'forbidden-light': 0.3,
+      'celestial-storm': 0.3,
+      'lost-thunder': 0.3,
+      'team-up': 0.4,
+      'detective-pikachu': 0.5,
+      'unbroken-bonds': 0.3,
+      'unified-minds': 0.3,
+      'hidden-fates': 0.6,
+      'cosmic-eclipse': 0.3,
+      'sword-shield': 0.2,
+      'rebel-clash': 0.2,
+      'darkness-ablaze': 0.2,
+      'champions-path': 0.3,
+      'vivid-voltage': 0.2,
+      'shining-fates': 0.3,
+      'battle-styles': 0.2,
+      'chilling-reign': 0.2,
+      'evolving-skies': 0.3,
+      'celebrations': 0.4,
+      'fusion-strike': 0.2,
+      'brilliant-stars': 0.2,
+      'astral-radiance': 0.2,
+      'lost-origin': 0.2,
+      'silver-tempest': 0.2,
+      'crown-zenith': 0.3,
+      'paldea-evolved': 0.2,
+      'obsidian-flames': 0.2,
+      '151': 0.4,
+      'parado': 0.2,
+      'temporal-forces': 0.2,
+      'twilight-masquerade': 0.2,
+      'shrouded-fable': 0.3,
+      'ancient-roar': 0.2,
+      'future-flash': 0.2,
+      'stellar-crown': 0.2
     }
 
-    const rarity = this.extractRarity(cardName)
-    const rarityMultiplier = rarityMultipliers[rarity] || 1.0
-    const setMultiplier = setMultipliers[set.toLowerCase()] || 1.0
+    // Use provided rarity or extract from card name
+    const cardRarity = rarity || this.extractRarity(cardName)
+    const rarityMultiplier = rarityMultipliers[cardRarity] || 1.0
 
-    return Math.max(0.1, rarityMultiplier * setMultiplier)
+    // Normalize set name for lookup
+    const normalizedSet = set.toLowerCase().replace(/[^a-z0-9-]/g, '-')
+    const setMultiplier = setMultipliers[normalizedSet] || 1.0
+
+    // Add some randomness to prevent identical pricing
+    const basePrice = rarityMultiplier * setMultiplier
+    const randomFactor = 0.8 + Math.random() * 0.4 // 0.8 to 1.2 multiplier
+    const finalPrice = basePrice * randomFactor
+
+    return Math.max(0.1, Math.round(finalPrice * 100) / 100) // Round to 2 decimal places
   }
 
   private extractRarity(cardName: string): string {
@@ -388,6 +536,44 @@ class PokemonTCGAPI {
         lastUpdated: pricing.lastUpdated
       }
     }
+  }
+
+  // Remove duplicate cards based on unique combination of name, set, and number
+  private removeDuplicateCards(cards: PokemonCard[]): PokemonCard[] {
+    const seen = new Set<string>()
+    return cards.filter(card => {
+      const key = `${card.name}-${card.set}-${card.number}`
+      if (seen.has(key)) {
+        return false
+      }
+      seen.add(key)
+      return true
+    })
+  }
+
+  // Process and validate image URLs
+  private processImageUrl(imageUrl: string): string {
+    if (!imageUrl || imageUrl.trim() === '') {
+      return ''
+    }
+
+    // If it's already a full URL, return as is
+    if (imageUrl.startsWith('http://') || imageUrl.startsWith('https://')) {
+      return imageUrl
+    }
+
+    // If it's a relative URL, try to construct a full URL
+    if (imageUrl.startsWith('/')) {
+      return `https://images.pokemontcg.io${imageUrl}`
+    }
+
+    // If it's just a filename or path, try common TCGdx image patterns
+    if (imageUrl.includes('.') && !imageUrl.includes('http')) {
+      return `https://images.pokemontcg.io/${imageUrl}`
+    }
+
+    // Return empty string for invalid URLs
+    return ''
   }
 }
 

@@ -579,17 +579,17 @@ class PokemonTCGAPI {
 
         // If it's a relative URL, try to construct a full URL
         if (imagePath.startsWith('/')) {
-          return `https://assets.tcgdx.net${imagePath}`
+          return `https://assets.tcgdex.net${imagePath}`
         }
 
         // If it's a TCGdex path (like "en/xy/xy6/39"), construct the proper URL
         if (imagePath.includes('/') && !imagePath.includes('http') && !imagePath.includes('.')) {
-          return `https://assets.tcgdx.net/${imagePath}/high.png`
+          return `https://assets.tcgdex.net/${imagePath}/high.png`
         }
 
         // If it's just a filename or path with extension, try common TCGdex image patterns
         if (imagePath.includes('.') && !imagePath.includes('http')) {
-          return `https://assets.tcgdx.net/${imagePath}`
+          return `https://assets.tcgdex.net/${imagePath}`
         }
       }
 
@@ -599,8 +599,8 @@ class PokemonTCGAPI {
 
       if (cardId && setId) {
         console.log('Attempting to construct URL from card ID and set ID:', { cardId, setId })
-        // Try common TCGdx image URL patterns
-        const constructedUrl = `https://assets.tcgdx.net/en/${setId}/${cardId}/high.png`
+        // Try common TCGdex image URL patterns
+        const constructedUrl = `https://assets.tcgdex.net/en/${setId}/${cardId}/high.png`
         console.log('Constructed URL:', constructedUrl)
         return constructedUrl
       }

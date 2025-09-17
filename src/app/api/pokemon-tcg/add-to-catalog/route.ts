@@ -17,15 +17,19 @@ export async function POST(request: NextRequest) {
 
     const { pokemonCardId, language = 'en' } = await request.json()
 
+    // Validate language parameter
+    const validLanguages = ['en', 'fr', 'es', 'it', 'pt', 'de'] as const
+    const validatedLanguage = validLanguages.includes(language) ? language : 'en'
+
     if (!pokemonCardId) {
       return NextResponse.json({ error: 'Pokemon card ID is required' }, { status: 400 })
     }
 
-    // Get card data from TCGdx
-    const card = await getCardById(pokemonCardId, language as 'en' | 'ja')
+    // Get card data from TCGdex
+    const card = await getCardById(pokemonCardId, validatedLanguage)
 
     // Get current market pricing
-    const pricing = await getMarketPricing(card.name, card.set, language as 'en' | 'ja')
+    const pricing = await getMarketPricing(card.name, card.set, validatedLanguage)
 
     // Convert to product format
     const productData = convertToProduct(card, pricing)
@@ -60,13 +64,13 @@ export async function POST(request: NextRequest) {
 
     if (error instanceof Error) {
       if (error.message.includes('timeout')) {
-        errorMessage = 'The Pokemon TCG API is taking too long to respond. Please try again.'
+        errorMessage = 'The TCGdex API is taking too long to respond. Please try again.'
         statusCode = 504
       } else if (error.message.includes('Rate limit')) {
         errorMessage = 'Too many requests. Please wait a moment and try again.'
         statusCode = 429
-      } else if (error.message.includes('Pokemon TCG API error')) {
-        errorMessage = 'Pokemon TCG API is currently unavailable. Please try again later.'
+      } else if (error.message.includes('TCGdex API error')) {
+        errorMessage = 'TCGdex API is currently unavailable. Please try again later.'
         statusCode = 503
       }
     }

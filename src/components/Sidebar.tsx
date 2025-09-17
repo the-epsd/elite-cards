@@ -103,13 +103,6 @@ export default function Sidebar({ currentPage = '' }: SidebarProps) {
                 <Zap className="h-4 w-4 mr-3" />
                 Pokemon TCG
               </button>
-              <button
-                onClick={() => handleNavigation('/admin/pokemon-tcg-jp')}
-                className={`w-full flex items-center px-3 py-2 text-sm rounded-md transition-colors ${isActive('pokemon-tcg-jp')}`}
-              >
-                <Zap className="h-4 w-4 mr-3" />
-                Pokemon TCG JP
-              </button>
             </>
           )}
 

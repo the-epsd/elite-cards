@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import Image from 'next/image'
-import { Search, Plus, RefreshCw } from 'lucide-react'
+import { Search, Plus } from 'lucide-react'
 import Sidebar from '@/components/Sidebar'
 import SkeletonLoader from '@/components/SkeletonLoader'
 import PageTransition from '@/components/PageTransition'
@@ -21,7 +21,7 @@ interface PokemonCard {
   midPrice: number
   highPrice: number
   lastUpdated: string
-  language: 'en' | 'ja'
+  language: 'en' | 'fr' | 'es' | 'it' | 'pt' | 'de'
 }
 
 interface PokemonSet {
@@ -32,7 +32,7 @@ interface PokemonSet {
   releaseDate: string
   symbolUrl: string
   logoUrl: string
-  language: 'en' | 'ja'
+  language: 'en' | 'fr' | 'es' | 'it' | 'pt' | 'de'
 }
 
 export default function PokemonTCGPage() {
@@ -49,7 +49,7 @@ export default function PokemonTCGPage() {
   const fetchInitialData = useCallback(async () => {
     try {
       const response = await fetch('/api/pokemon-tcg/sets?language=en')
-      
+
       if (response.ok) {
         const data = await response.json()
         setSets(data.sets)
@@ -87,7 +87,7 @@ export default function PokemonTCGPage() {
       }
 
       const response = await fetch(`/api/pokemon-tcg/search?${params}`)
-      
+
       if (response.ok) {
         const data = await response.json()
         setCards(data.cards)
@@ -150,7 +150,7 @@ export default function PokemonTCGPage() {
             headers: {
               'Content-Type': 'application/json',
             },
-            body: JSON.stringify({ 
+            body: JSON.stringify({
               pokemonCardId: cardId,
               language: 'en'
             })
@@ -209,7 +209,7 @@ export default function PokemonTCGPage() {
   return (
     <div className="min-h-screen bg-gray-50 flex">
       <Sidebar currentPage="pokemon-tcg" />
-      
+
       <div className="flex-1 flex flex-col">
         <main className="flex-1 py-6 px-6">
           <PageTransition>
@@ -224,7 +224,7 @@ export default function PokemonTCGPage() {
             {/* Search Section */}
             <div className="bg-white shadow rounded-lg p-6 mb-6">
               <h2 className="text-lg font-medium text-gray-900 mb-4">Search Pokemon Cards</h2>
-              
+
               <form onSubmit={handleSearch} className="space-y-4">
                 <div className="flex gap-4">
                   <div className="flex-1">
@@ -283,11 +283,10 @@ export default function PokemonTCGPage() {
                   {cards.map((card) => (
                     <div
                       key={card.id}
-                      className={`border rounded-lg p-4 cursor-pointer transition-colors ${
-                        selectedCards.has(card.id)
-                          ? 'border-indigo-500 bg-indigo-50'
-                          : 'border-gray-200 hover:border-gray-300'
-                      }`}
+                      className={`border rounded-lg p-4 cursor-pointer transition-colors ${selectedCards.has(card.id)
+                        ? 'border-indigo-500 bg-indigo-50'
+                        : 'border-gray-200 hover:border-gray-300'
+                        }`}
                       onClick={() => toggleCardSelection(card.id)}
                     >
                       <div className="flex items-start gap-3">

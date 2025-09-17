@@ -559,44 +559,53 @@ class PokemonTCGAPI {
       // Check if the card has the getImageURL method (from TCGdex SDK)
       const cardWithImageMethod = card as Record<string, unknown> & { getImageURL?: (quality: string, format: string) => string }
       if (card && typeof cardWithImageMethod.getImageURL === 'function') {
-        return cardWithImageMethod.getImageURL('high', 'png')
+        const imageUrl = cardWithImageMethod.getImageURL('high', 'png')
+        console.log('Generated image URL using getImageURL:', imageUrl)
+        return imageUrl
       }
 
-      // Fallback to manual URL construction if getImageURL is not available
+      console.log('Card does not have getImageURL method, trying fallback methods')
+      console.log('Card properties:', Object.keys(card))
+
+      // Try to get the image from the card's image property
       const imagePath = String(card.image || '')
-      console.log('Image path from card:', imagePath, 'Card data:', {
-        id: card.id,
-        name: card.name,
-        image: card.image,
-        hasImageProperty: 'image' in card
-      })
+      console.log('Image path from card.image:', imagePath)
 
-      if (!imagePath || imagePath.trim() === '' || imagePath === 'undefined') {
-        console.log('No valid image path found for card:', card.id)
-        return ''
+      if (imagePath && imagePath.trim() !== '' && imagePath !== 'undefined') {
+        // If it's already a full URL, return as is
+        if (imagePath.startsWith('http://') || imagePath.startsWith('https://')) {
+          return imagePath
+        }
+
+        // If it's a relative URL, try to construct a full URL
+        if (imagePath.startsWith('/')) {
+          return `https://assets.tcgdx.net${imagePath}`
+        }
+
+        // If it's a TCGdex path (like "en/xy/xy6/39"), construct the proper URL
+        if (imagePath.includes('/') && !imagePath.includes('http') && !imagePath.includes('.')) {
+          return `https://assets.tcgdx.net/${imagePath}/high.png`
+        }
+
+        // If it's just a filename or path with extension, try common TCGdex image patterns
+        if (imagePath.includes('.') && !imagePath.includes('http')) {
+          return `https://assets.tcgdx.net/${imagePath}`
+        }
       }
 
-      // If it's already a full URL, return as is
-      if (imagePath.startsWith('http://') || imagePath.startsWith('https://')) {
-        return imagePath
+      // Try to construct URL from card ID and set information
+      const cardId = String(card.id || '')
+      const setId = String((card.set as Record<string, unknown>)?.id || '')
+
+      if (cardId && setId) {
+        console.log('Attempting to construct URL from card ID and set ID:', { cardId, setId })
+        // Try common TCGdx image URL patterns
+        const constructedUrl = `https://assets.tcgdx.net/en/${setId}/${cardId}/high.png`
+        console.log('Constructed URL:', constructedUrl)
+        return constructedUrl
       }
 
-      // If it's a relative URL, try to construct a full URL
-      if (imagePath.startsWith('/')) {
-        return `https://assets.tcgdex.net${imagePath}`
-      }
-
-      // If it's a TCGdex path (like "en/xy/xy6/39"), construct the proper URL
-      if (imagePath.includes('/') && !imagePath.includes('http') && !imagePath.includes('.')) {
-        return `https://assets.tcgdex.net/${imagePath}/high.png`
-      }
-
-      // If it's just a filename or path with extension, try common TCGdex image patterns
-      if (imagePath.includes('.') && !imagePath.includes('http')) {
-        return `https://assets.tcgdex.net/${imagePath}`
-      }
-
-      console.log('Could not construct valid image URL for path:', imagePath)
+      console.log('Could not construct valid image URL for card:', card.id)
       return ''
     } catch (error) {
       console.error('Error getting card image URL:', error)

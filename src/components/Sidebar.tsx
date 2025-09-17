@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Image from 'next/image'
-import { Package, Users, Plus, LogOut, BarChart3 } from 'lucide-react'
+import { Package, Users, Plus, LogOut, BarChart3, Zap } from 'lucide-react'
 
 interface UserSession {
   userId: string
@@ -95,6 +95,13 @@ export default function Sidebar({ currentPage = '' }: SidebarProps) {
               >
                 <Users className="h-4 w-4 mr-3" />
                 Manage Users
+              </button>
+              <button
+                onClick={() => handleNavigation('/admin/pokemon')}
+                className={`w-full flex items-center px-3 py-2 text-sm rounded-md transition-colors ${isActive('pokemon')}`}
+              >
+                <Zap className="h-4 w-4 mr-3" />
+                Pokemon TCG
               </button>
             </>
           )}

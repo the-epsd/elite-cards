@@ -24,6 +24,14 @@ export interface Product {
   set: string
   created_by: string
   is_single: boolean
+  pokemon_card_id?: string
+  market_data?: {
+    low_price: number
+    mid_price: number
+    high_price: number
+    last_updated: string
+  }
+  auto_price_sync: boolean
   created_at: string
   updated_at: string
 }
@@ -124,12 +132,21 @@ export async function createProduct(productData: {
   set: string
   created_by: string
   is_single?: boolean
+  pokemon_card_id?: string
+  market_data?: {
+    low_price: number
+    mid_price: number
+    high_price: number
+    last_updated: string
+  }
+  auto_price_sync?: boolean
 }): Promise<Product> {
   const { data, error } = await supabase
     .from('products')
     .insert({
       ...productData,
       is_single: productData.is_single || false,
+      auto_price_sync: productData.auto_price_sync || false,
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString()
     })
@@ -445,4 +462,132 @@ export async function getSyncStatusByUser(userId: string): Promise<{
   }
 
   return status
+}
+
+// Pokemon TCG specific functions
+export async function createPokemonProduct(productData: {
+  title: string
+  description: string
+  price: number
+  image_url: string
+  set: string
+  created_by: string
+  pokemon_card_id: string
+  market_data: {
+    low_price: number
+    mid_price: number
+    high_price: number
+    last_updated: string
+  }
+}): Promise<Product> {
+  return createProduct({
+    ...productData,
+    is_single: true,
+    auto_price_sync: true
+  })
+}
+
+export async function getProductsWithAutoSync(): Promise<Product[]> {
+  const { data, error } = await supabase
+    .from('products')
+    .select('*')
+    .eq('auto_price_sync', true)
+    .not('pokemon_card_id', 'is', null)
+
+  if (error) {
+    throw new Error(`Failed to get products with auto sync: ${error.message}`)
+  }
+
+  return data || []
+}
+
+export async function updateProductPrice(productId: string, newPrice: number, marketData?: {
+  low_price: number
+  mid_price: number
+  high_price: number
+  last_updated: string
+}): Promise<Product> {
+  const updateData: Record<string, unknown> = {
+    price: newPrice,
+    updated_at: new Date().toISOString()
+  }
+
+  if (marketData) {
+    updateData.market_data = marketData
+  }
+
+  const { data, error } = await supabase
+    .from('products')
+    .update(updateData)
+    .eq('id', productId)
+    .select()
+    .single()
+
+  if (error) {
+    throw new Error(`Failed to update product price: ${error.message}`)
+  }
+
+  return data
+}
+
+export async function getUsersWithProduct(productId: string): Promise<(AddedProduct & { users: User | null })[]> {
+  const { data, error } = await supabase
+    .from('added_products')
+    .select(`
+      *,
+      users (
+        id,
+        shop_domain,
+        access_token
+      )
+    `)
+    .eq('product_id', productId)
+    .eq('sync_status', 'active')
+
+  if (error) {
+    throw new Error(`Failed to get users with product: ${error.message}`)
+  }
+
+  return data || []
+}
+
+export async function updateShopifyProductPrice(
+  accessToken: string,
+  shopDomain: string,
+  shopifyProductId: string,
+  newPrice: number
+): Promise<{ success: boolean; error?: string }> {
+  try {
+    const response = await fetch(`https://${shopDomain}/admin/api/2024-01/products/${shopifyProductId}.json`, {
+      method: 'PUT',
+      headers: {
+        'X-Shopify-Access-Token': accessToken,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        product: {
+          id: shopifyProductId,
+          variants: [{
+            id: 1, // This would need to be the actual variant ID
+            price: newPrice.toString()
+          }]
+        }
+      })
+    })
+
+    if (!response.ok) {
+      const errorText = await response.text()
+      return {
+        success: false,
+        error: `Shopify API error: ${response.status} ${errorText}`
+      }
+    }
+
+    return { success: true }
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error'
+    }
+  }
 }

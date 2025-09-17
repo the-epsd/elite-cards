@@ -313,7 +313,7 @@ export default function PokemonTCGPage() {
                             {card.set} • {card.rarity}
                           </p>
                           <p className="text-xs text-gray-400 truncate">
-                            #{card.number} • Set: {card.setId}
+                            #{card.number} • Set: {card.set}
                           </p>
                           <p className="text-sm font-medium text-green-600">
                             ${card.marketPrice.toFixed(2)}

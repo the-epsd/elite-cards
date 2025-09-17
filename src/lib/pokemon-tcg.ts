@@ -1,4 +1,4 @@
-import TCGdx, { Query } from '@tcgdex/sdk'
+import TCGdex, { Query } from '@tcgdex/sdk'
 
 // TCGdex API integration for Pokemon TCG product data and pricing
 export interface PokemonCard {
@@ -69,13 +69,13 @@ export interface PokemonTCGResponse {
 }
 
 class PokemonTCGAPI {
-  private tcgdex: TCGdx
+  private tcgdex: TCGdex
 
   constructor() {
-    this.tcgdex = new TCGdx('en')
+    this.tcgdex = new TCGdex('en')
   }
 
-  private getTcgdex(_language: 'en' | 'fr' | 'es' | 'it' | 'pt' | 'de'): TCGdx {
+  private getTcgdex(_language: 'en' | 'fr' | 'es' | 'it' | 'pt' | 'de'): TCGdex {
     // For now, only support English as the SDK doesn't support Japanese
     // In the future, we could create multiple instances for different languages
     return this.tcgdex
@@ -564,7 +564,15 @@ class PokemonTCGAPI {
 
       // Fallback to manual URL construction if getImageURL is not available
       const imagePath = String(card.image || '')
-      if (!imagePath || imagePath.trim() === '') {
+      console.log('Image path from card:', imagePath, 'Card data:', {
+        id: card.id,
+        name: card.name,
+        image: card.image,
+        hasImageProperty: 'image' in card
+      })
+
+      if (!imagePath || imagePath.trim() === '' || imagePath === 'undefined') {
+        console.log('No valid image path found for card:', card.id)
         return ''
       }
 
@@ -575,19 +583,20 @@ class PokemonTCGAPI {
 
       // If it's a relative URL, try to construct a full URL
       if (imagePath.startsWith('/')) {
-        return `https://assets.tcgdx.net${imagePath}`
+        return `https://assets.tcgdex.net${imagePath}`
       }
 
       // If it's a TCGdex path (like "en/xy/xy6/39"), construct the proper URL
       if (imagePath.includes('/') && !imagePath.includes('http') && !imagePath.includes('.')) {
-        return `https://assets.tcgdx.net/${imagePath}.png`
+        return `https://assets.tcgdex.net/${imagePath}/high.png`
       }
 
       // If it's just a filename or path with extension, try common TCGdex image patterns
       if (imagePath.includes('.') && !imagePath.includes('http')) {
-        return `https://assets.tcgdx.net/${imagePath}`
+        return `https://assets.tcgdex.net/${imagePath}`
       }
 
+      console.log('Could not construct valid image URL for path:', imagePath)
       return ''
     } catch (error) {
       console.error('Error getting card image URL:', error)

@@ -24,7 +24,6 @@ export interface Product {
   set: string
   created_by: string
   is_single: boolean
-  pokemon_card_id?: string
   market_data?: {
     low_price: number
     mid_price: number
@@ -132,7 +131,6 @@ export async function createProduct(productData: {
   set: string
   created_by: string
   is_single?: boolean
-  pokemon_card_id?: string
   market_data?: {
     low_price: number
     mid_price: number
@@ -464,42 +462,6 @@ export async function getSyncStatusByUser(userId: string): Promise<{
   return status
 }
 
-// Pokemon TCG specific functions
-export async function createPokemonProduct(productData: {
-  title: string
-  description: string
-  price: number
-  image_url: string
-  set: string
-  created_by: string
-  pokemon_card_id: string
-  market_data: {
-    low_price: number
-    mid_price: number
-    high_price: number
-    last_updated: string
-  }
-}): Promise<Product> {
-  return createProduct({
-    ...productData,
-    is_single: true,
-    auto_price_sync: true
-  })
-}
-
-export async function getProductsWithAutoSync(): Promise<Product[]> {
-  const { data, error } = await supabase
-    .from('products')
-    .select('*')
-    .eq('auto_price_sync', true)
-    .not('pokemon_card_id', 'is', null)
-
-  if (error) {
-    throw new Error(`Failed to get products with auto sync: ${error.message}`)
-  }
-
-  return data || []
-}
 
 export async function updateProductPrice(productId: string, newPrice: number, marketData?: {
   low_price: number
